@@ -1,0 +1,6 @@
+github.com/alecthomas/repr v0.5.2 h1:SU73FTI9D1P5UNtvseffFSGmdNci/O6RsqzeXJtP0Qs=
+github.com/alecthomas/repr v0.5.2/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
+github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/marco-m/rosina v0.1.4-0.20260130204644-69d4a52f1efd h1:J9p5/Uc2oussH/D+Zg0MXfXDrZ8XW/e7HLnoXdZtXNs=
+github.com/marco-m/rosina v0.1.4-0.20260130204644-69d4a52f1efd/go.mod h1:GsCRT1UMSnWl2hJ/AWF+IJTazLABDQjHyCprPToDoFc=

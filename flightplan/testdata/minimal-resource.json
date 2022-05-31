@@ -1,0 +1,12 @@
+{
+  "resources": [
+    {
+      "name": "repo.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git",
+        "branch": "master"
+      }
+    }
+  ]
+}
