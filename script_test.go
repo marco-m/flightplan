@@ -9,6 +9,7 @@ package flightplan_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -30,7 +31,11 @@ func runScriptTests(t *testing.T, pattern string) {
 	// The script environment variable PATH has meaning similar to PATH for a shell:
 	// an executable  'foo' in PATH can be invoked in a test script with 'exec foo ...'.
 	// That is, we put in PATH the systems under test (SUTs).
-	env := []string{"PATH=" + dir}
+	env := []string{
+		"PATH=" + dir,
+		// "go test -cover" already sets a GOCOVERDIR; we don't want that!
+		"GOCOVERDIR=" + os.Getenv("COVER_INTEGRATION"),
+	}
 
 	engine := &script.Engine{
 		Cmds:  scripttest.DefaultCmds(),
@@ -46,13 +51,26 @@ func runScriptTests(t *testing.T, pattern string) {
 }
 
 // Build Go code in 'src', give it 'name', put it in 'dir'. Return path 'dir/name'.
+// If the tests are invoked from our build script (as opposed to a manual "go test"),
+// also instrument for code coverage.
 func goBuild(name, src, dir string) (string, error) {
 	outPath := filepath.Join(dir, name)
 	// staticcheck: due to the file's build constraints, runtime.GOOS will never equal "windows"
 	// if runtime.GOOS == "windows" {
 	// 	outPath += ".exe"
 	// }
-	out, err := exec.Command("go", "build", "-o", outPath, src).CombinedOutput()
+
+	args := []string{"build", "-o", outPath}
+	// -cover: code coverage for integration testing; see https://go.dev/doc/build-cover
+	// We add --cover only if running from our build script (detected by the presence of
+	// the COVER_INTEGRATION env var) to avoid the message:
+	//     warning: GOCOVERDIR not set, no coverage data emitted
+	// when running the tests directly from the shell.
+	if os.Getenv("COVER_INTEGRATION") != "" {
+		args = append(args, "-cover")
+	}
+	args = append(args, src)
+	out, err := exec.Command("go", args...).CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("building %s: %s\n%s", src, err, string(out))
 	}
