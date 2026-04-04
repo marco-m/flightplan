@@ -6,13 +6,11 @@ exec examples-empty -h
 cmp stderr output.want
 
 #
-# Empty pipeline returns an error.
+# Command-line unrecognized argument.
 #
-! exec examples-empty
+! exec examples-empty ciao bello
 ! stdout .
-stderr 'render: pipeline cannot be empty'
-
-
+stderr 'unrecognized arguments: ciao bello'
 
 -- output.want --
 examples-empty -- generate a Concourse pipeline with flightplan

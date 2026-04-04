@@ -1,0 +1,6 @@
+#
+# Empty pipeline returns an error.
+#
+! exec examples-empty
+! stdout .
+stderr 'render: pipeline cannot be empty'
