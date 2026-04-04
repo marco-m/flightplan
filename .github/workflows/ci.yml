@@ -6,7 +6,7 @@ env:
   go-version: '1.26.x'
 defaults:
   run:
-    shell: sh
+    shell: bash
 jobs:
   all:
     strategy:
@@ -15,30 +15,74 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
-    - name: Install Go ${{ env.go-version }}
-      uses: actions/setup-go@v6
-      with:
-        go-version: ${{ env.go-version }}
+      - name: Install Go ${{ env.go-version }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.go-version }}
+  
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+  
+      - name: dowload just linux
+        if: matrix.os == 'ubuntu-latest'
+        run: curl -o just.tar.gz --fail --location https://github.com/casey/just/releases/download/1.48.1/just-1.48.1-x86_64-unknown-linux-musl.tar.gz
 
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        persist-credentials: false
+      - name: dowload just macos
+        if: matrix.os == 'macos-latest'
+        run: curl -o just.tar.gz --fail --location https://github.com/casey/just/releases/download/1.48.1/just-1.48.1-x86_64-apple-darwin.tar.gz
 
-    - name: Build
-      run: go build ./...
+      - name: dowload just windows
+        if: matrix.os == 'windows-latest'
+        run: curl -o just.zip --fail --location https://github.com/casey/just/releases/download/1.48.1/just-1.48.1-x86_64-pc-windows-msvc.zip
 
-    - name: Test
-      run: go test --cover ./...
+      - name: prepare SHASUMS linux
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "9293e553ce401d1b524bf4e104918f72f268e3f9c6827e0055fe98d84a1b2522  just.tar.gz" > SHA256SUMS
 
-    - name: vet
-      run: go vet ./...
+      - name: prepare SHASUMS macos
+        if: matrix.os == 'macos-latest'
+        run: echo "4c3e9c880b8fc93d7fc24abfde3c36b0cc59f6e9f8b31f7175095700f64125a7  just.tar.gz" > SHA256SUMS
 
-    - name: staticcheck
-      if: matrix.os == 'ubuntu-latest'
-      # @v1.4.1
-      uses: dominikh/staticcheck-action@9716614d4101e79b4340dd97b10e54d68234e431
-      with:
-        # 2026.1
-        version: ff63afafc529279f454e02f1d060210bd4263951
-        install-go: false
+      - name: prepare SHASUMS windows
+        if: matrix.os == 'windows-latest'
+        run: echo "368cd9ca827cba04d9e6fc00f7ad840773c4605b6f64b9f87bdb00325d351029  just.zip" > SHA256SUMS
+
+      - name: calculate SHASUM (obviously windows doesn't have shasum)
+        if: matrix.os != 'windows-latest'
+        run: shasum -a 256 --check SHA256SUMS
+
+      - name: extract just for linux and macos
+        if: matrix.os != 'windows-latest'
+        run: tar xzf just.tar.gz just
+
+      - name: extract just for windows
+        if: matrix.os == 'windows-latest'
+        run: unzip just.zip just.exe
+
+      # Hack but should work
+      - run: cp just $(go env GOPATH)/bin/
+        if: matrix.os != 'windows-latest'
+
+      # Hack but should work
+      - run: cp just.exe $(go env GOPATH)/bin/
+        if: matrix.os == 'windows-latest'
+  
+      - name: tests
+        run: just test
+
+      - name: Build
+        run: go build ./...
+
+      - name: vet
+        run: go vet ./...
+
+      - name: staticcheck
+        if: matrix.os == 'ubuntu-latest'
+        # @v1.4.1
+        uses: dominikh/staticcheck-action@9716614d4101e79b4340dd97b10e54d68234e431
+        with:
+          # 2026.1
+          version: ff63afafc529279f454e02f1d060210bd4263951
+          install-go: false
