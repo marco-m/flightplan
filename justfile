@@ -1,6 +1,6 @@
 # https://just.systems
 
-cover_dir := env('PWD') + "/.cover"
+cover_dir := env('PWD') + "/.scratch/cover"
 export COVER_MERGE := cover_dir + "/merge"
 export COVER_UNIT := cover_dir + "/unit"
 export COVER_INTEGRATION := cover_dir + "/integration"
@@ -14,7 +14,7 @@ export COVER_INTEGRATION := cover_dir + "/integration"
 #    go tool cover -html=.cover/profile
 
 test: clean-coverage
-    go test -cover -coverpkg=./... -args -test.gocoverdir=${COVER_UNIT} ./...
+    go test -count=1 -cover -coverpkg=./... -args -test.gocoverdir=${COVER_UNIT} ./...
     @ # Show per package coverage data considering unit and integration:
     go tool covdata percent -i=${COVER_UNIT},${COVER_INTEGRATION}
     @ # Merge binary format and then convert to text format (will be used by coverage-browser):
