@@ -18,5 +18,7 @@ examples-empty -- generate a Concourse pipeline with flightplan
 Usage: examples-empty [ARGS]
 
 Options:
+  -directory string
+    	Directory in which to write the pipeline file (default ".")
   -name string
     	Name of the pipeline file (default "empty")
