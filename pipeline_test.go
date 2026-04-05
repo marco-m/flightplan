@@ -4,10 +4,11 @@
 package flightplan_test
 
 import (
-	"errors"
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
+
+	"github.com/marco-m/rosina/assert"
 )
 
 func TestEmptyPipelineIsInvalid(t *testing.T) {
@@ -15,7 +16,5 @@ func TestEmptyPipelineIsInvalid(t *testing.T) {
 
 	err := pipeline.Render()
 
-	if !errors.Is(err, plan.ErrEmptyPipeline) {
-		t.Fatalf("Render:\nhave: %v\nwant: %v", err, plan.ErrEmptyPipeline)
-	}
+	assert.ErrorIs(t, err, plan.ErrEmptyPipeline, "Render")
 }
