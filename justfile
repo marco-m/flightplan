@@ -14,7 +14,8 @@ export COVER_INTEGRATION := cover_dir + "/integration"
 #    go tool cover -html=.cover/profile
 
 test: clean-coverage
-    go test -count=1 -cover -coverpkg=./... -args -test.gocoverdir=${COVER_UNIT} ./...
+    @ # careful: arguments after -args are silently ignored.
+    go test -count=1 -cover -coverpkg=./...  ./... -args -test.gocoverdir=${COVER_UNIT}
     @ # Show per package coverage data considering unit and integration:
     go tool covdata percent -i=${COVER_UNIT},${COVER_INTEGRATION}
     @ # Merge binary format and then convert to text format (will be used by coverage-browser):
