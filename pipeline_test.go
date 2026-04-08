@@ -20,6 +20,14 @@ import (
 var update = flag.Bool("golden.update", false,
 	"update the golden files for this package; use with -run to update a single test")
 
+var resource = plan.Resource{
+	Name: "flightplan.git",
+	Source: plan.GitSource{
+		Uri:    "https://github.com/marco-m/flightplan.git",
+		Branch: "master",
+	},
+}
+
 var job = plan.Job{
 	Name: "bake-pizza",
 	Plan: []plan.Step{

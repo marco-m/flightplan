@@ -31,10 +31,27 @@ cmp $WORK/mango/banana.json simple.want.json
 
 -- simple.want.json --
 {
+  "resources": [
+    {
+      "name": "flightplan.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git",
+        "branch": "master",
+        "paths": [
+          "ci/*"
+        ]
+      }
+    }
+  ],
   "jobs": [
     {
       "name": "knead-pizza",
       "plan": [
+        {
+          "get": "flightplan.git",
+          "trigger": true
+        },
         {
           "task": "prepare-dough",
           "config": {

@@ -8,6 +8,30 @@ type Step interface {
 	step()
 }
 
+// Fetches a version of a resource.
+// See https://concourse-ci.org/docs/steps/get/
+type Get struct {
+	// Required
+
+	Get ResourceHandle `json:"get,omitzero"`
+
+	// Optional
+
+	// Resource ResourceHandle `json:"resource,omitzero"` // I don't understand this one
+	Passed  []JobHandle       `json:"passed,omitzero"`
+	Trigger bool              `json:"trigger,omitzero"`
+	Params  map[string]string `json:"params,omitzero"`
+	Version string            `json:"version,omitzero"`
+}
+
+func (Get) step() {}
+
+type Put struct {
+	Resource ResourceHandle
+}
+
+func (Put) step() {}
+
 type Task struct {
 	// Required
 	Task string `json:"task,omitzero"`

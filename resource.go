@@ -3,6 +3,29 @@
 
 package flightplan
 
+type Resource struct {
+	// Required
+
+	// Name is the resource name. You must set it.
+	Name string `json:"name,omitzero"`
+	// Type is the resource type. Leave it alone; will be set by [Source.Type].
+	Type string `json:"type,omitzero"`
+	// The contents of Source are specific to the resource type.
+	Source Source `json:"source,omitzero,omitempty"`
+
+	// Optional
+
+	OldName              string   `json:"old_name,omitzero"`
+	Icon                 string   `json:"icon,omitzero"`
+	Version              string   `json:"version,omitzero"`
+	CheckEvery           string   `json:"check_every,omitzero"`
+	CheckTimeout         string   `json:"check_timeout,omitzero"`
+	ExposeBuildCreatedBy bool     `json:"expose_build_created_by,omitzero"`
+	Tags                 []string `json:"tags,omitzero,omitempty"`
+	Public               bool     `json:"public,omitzero"`
+	WebhookToken         string   `json:"webhook_token,omitzero"`
+}
+
 type AnonymousResource struct {
 	// Required. Type is usually "registry-image", see [RegistryImageSource]
 	Type string `json:"type,omitzero"`
@@ -25,3 +48,8 @@ type Source interface {
 	// considered an error.
 	Type() string
 }
+
+// A resource name must be unique per pipeline, otherwhise it could not be resolved
+// unambiguously as a get or put step. Thus, we can use its name as handle: returned
+// by [Pipeline.AddResource] and required by [Pipeline.AddJob].
+type ResourceHandle string

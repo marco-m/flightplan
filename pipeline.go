@@ -18,10 +18,13 @@ import (
 
 var (
 	ErrDuplicateJob       = errors.New("pipeline cannot have duplicate job")
+	ErrDuplicateResource  = errors.New("pipeline cannot have duplicate resource")
 	ErrNoJobs             = errors.New("pipeline must have at least one job")
 	ErrEmptyPipelineName  = errors.New("pipeline name cannot be empty")
 	ErrEmptyJobName       = errors.New("job name cannot be empty")
 	ErrMissingNewPipeline = errors.New("must use NewPipeline to create a pipeline")
+	ErrEmptyResourceName  = errors.New("resource name cannot be empty")
+	ErrSetResourceType    = errors.New("resource type cannot be set (will be set by Source.Type)")
 	ErrSystem             = errors.New("unexpected")
 )
 
@@ -69,6 +72,31 @@ func NewPipeline(name string, args []string) *Pipeline {
 	parseCommandLine(pl, args)
 
 	return pl
+}
+
+// AddResource adds resource 'res' to the pipeline. Any error will be returned by
+// [Pipeline.Render].
+func (pl *Pipeline) AddResource(res Resource) ResourceHandle {
+	if res.Name == "" {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %w", ErrEmptyResourceName))
+		return ""
+	}
+	if res.Type != "" {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %w: %q", ErrSetResourceType, res.Type))
+		return ""
+	}
+	res.Type = res.Source.Type()
+	for _, r := range pl.po.Resources {
+		if r.Name == res.Name {
+			pl.errs = append(pl.errs,
+				goof.Wrap("AddResource: %w: %q", ErrDuplicateResource, r.Name))
+			return ""
+		}
+	}
+	pl.po.Resources = append(pl.po.Resources, res)
+	return ResourceHandle(res.Name)
 }
 
 func (pl *Pipeline) AddJob(job Job) JobHandle {
@@ -142,6 +170,17 @@ func (pl *Pipeline) Errors() error {
 	return errors.Join(pl.errs...)
 }
 
+// Resource returns a copy of the [Resource] associated with 'handle'.
+// Client code doesn't need to call this function.
+func (pl *Pipeline) Resource(handle ResourceHandle) (res Resource, found bool) {
+	for _, r := range pl.po.Resources {
+		if ResourceHandle(r.Name) == handle {
+			return r, true
+		}
+	}
+	return Resource{}, false
+}
+
 // Parses the command-line and overrides settings in 'pl' based on the parse.
 // Can call directly or indirectly [os.Exit].
 func parseCommandLine(pl *Pipeline, args []string) {
@@ -163,6 +202,9 @@ func parseCommandLine(pl *Pipeline, args []string) {
 }
 
 type pipelineObject struct {
+	// Resources is the Concourse "resources" object.
+	// Use [Pipeline.AddResource] to add to it.
+	Resources []Resource `json:"resources,omitempty"`
 	// Jobs is the Concourse "jobs" object.
 	// Use [Pipeline.AddJob] to add to it.
 	Jobs []Job `json:"jobs,omitempty"`
