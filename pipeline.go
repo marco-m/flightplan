@@ -14,11 +14,13 @@ import (
 	"strings"
 
 	"github.com/marco-m/flightplan/internal/goof"
+	"github.com/marco-m/flightplan/resources"
 	"github.com/mitchellh/copystructure"
 )
 
 var (
 	ErrDuplicateJob          = errors.New("pipeline cannot have duplicate job")
+	ErrDuplicateResource     = errors.New("pipeline cannot have duplicate resource")
 	ErrNoJobs                = errors.New("pipeline must have at least one job")
 	ErrEmptyPipelineName     = errors.New("pipeline name cannot be empty")
 	ErrEmptyJobName          = errors.New("job name cannot be empty")
@@ -26,7 +28,9 @@ var (
 	ErrTaskNoConfigNoFile    = errors.New("task must have Config or File")
 	ErrTaskNoName            = errors.New("task field 'Task' cannot be empty")
 	ErrMissingNewPipeline    = errors.New("must use NewPipeline to create a pipeline")
-	ErrSetImageType          = errors.New("image resource type cannot be set (will be set by Source.Type)")
+	ErrSetImageType          = errors.New("ImageResource Type cannot be set (will be set by Source.Type)")
+	ErrEmptyResourceName     = errors.New("resource name cannot be empty")
+	ErrSetResourceType       = errors.New("Resource Type cannot be set (will be set by Source.Type)")
 	ErrSystem                = errors.New("system error")
 	ErrInternal              = errors.New("flightplan internal error, please report")
 )
@@ -108,7 +112,8 @@ func (pl *Pipeline) AddJob(job Job) JobHandle {
 				imgRes := task.Config.ImageResource
 				if imgRes.Type != "" {
 					pl.errs = append(pl.errs,
-						goof.Wrap("AddJob: %w: %q", ErrSetImageType, imgRes.Type))
+						goof.Wrap("AddJob: Task %s: %w: %q",
+							task.Task, ErrSetImageType, imgRes.Type))
 					return ""
 				}
 				task.Config.ImageResource.Type = task.Config.ImageResource.Source.Type()
@@ -136,6 +141,42 @@ func (pl *Pipeline) Job(handle JobHandle) (res Job, found bool) {
 		}
 	}
 	return Job{}, false
+}
+
+// AddResource adds resource 'res' to the pipeline. Any error will be returned by
+// [Pipeline.Render].
+func (pl *Pipeline) AddResource(res resources.Resource) resources.ResourceHandle {
+	if res.Name == "" {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %w", ErrEmptyResourceName))
+		return ""
+	}
+	if res.Type != "" {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %w: %q", ErrSetResourceType, res.Type))
+		return ""
+	}
+	res.Type = res.Source.Type()
+	for _, r := range pl.po.Resources {
+		if r.Name == res.Name {
+			pl.errs = append(pl.errs,
+				goof.Wrap("AddResource: %w: %q", ErrDuplicateResource, r.Name))
+			return ""
+		}
+	}
+	pl.po.Resources = append(pl.po.Resources, res)
+	return resources.ResourceHandle(res.Name)
+}
+
+// Resource returns a copy of the [Resource] associated with 'handle'.
+// Client code doesn't need to call this function.
+func (pl *Pipeline) Resource(handle resources.ResourceHandle) (res resources.Resource, found bool) {
+	for _, r := range pl.po.Resources {
+		if resources.ResourceHandle(r.Name) == handle {
+			return r, true
+		}
+	}
+	return resources.Resource{}, false
 }
 
 // Render generates the pipeline and writes it by default to the same directory where
@@ -216,6 +257,9 @@ func parseCommandLine(pl *Pipeline, args []string) {
 }
 
 type pipelineObject struct {
+	// Resources is the Concourse "resources" object.
+	// Use [Pipeline.AddResource] to add to it.
+	Resources []resources.Resource `json:"resources,omitempty"`
 	// Jobs is the Concourse "jobs" object.
 	// Use [Pipeline.AddJob] to add to it.
 	Jobs []Job `json:"jobs,omitempty"`

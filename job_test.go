@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
+	"github.com/marco-m/flightplan/resources"
 
 	"github.com/marco-m/rosina/assert"
 	"github.com/marco-m/rosina/check"
@@ -91,7 +92,7 @@ func TestAddJobTaskConfigCannotHaveImageType(t *testing.T) {
 				Task: "mango",
 				Config: &plan.TaskConfig{
 					Platform: "",
-					ImageResource: plan.AnonymousResource{
+					ImageResource: resources.AnonymousResource{
 						Type: "this-will-fail",
 					},
 				},

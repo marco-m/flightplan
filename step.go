@@ -3,12 +3,38 @@
 
 package flightplan
 
+import "github.com/marco-m/flightplan/resources"
+
 // Step is a step in a [Job.Plan]. You compose the plan using the following concrete
 // steps: [Task], [Get], [Put], [SetPipeline], [InParallel], [Do], [Try], [Loadvar].
 type Step interface {
 	// Confirm that the struct is actually a [Step] (sealed interface).
 	step()
 }
+
+// Fetches a version of a resource.
+// See https://concourse-ci.org/docs/steps/get/
+type Get struct {
+	// Required
+
+	Get resources.ResourceHandle `json:"get,omitzero"`
+
+	// Optional
+
+	// Resource ResourceHandle `json:"resource,omitzero"` // I don't understand this one
+	Passed  []JobHandle       `json:"passed,omitzero"`
+	Trigger bool              `json:"trigger,omitzero"`
+	Params  map[string]string `json:"params,omitzero"`
+	Version string            `json:"version,omitzero"`
+}
+
+func (Get) step() {}
+
+type Put struct {
+	Resource resources.ResourceHandle
+}
+
+func (Put) step() {}
 
 // Task implements [Step].
 // See https://concourse-ci.org/docs/steps/task/
@@ -32,7 +58,7 @@ type TaskConfig struct {
 	Platform string `json:"platform,omitzero"`
 
 	// Optional. The container image to run with. Prefer instead [Task.Image].
-	ImageResource AnonymousResource `json:"image_resource,omitzero"`
+	ImageResource resources.AnonymousResource `json:"image_resource,omitzero"`
 	// Optional.
 	Inputs []TaskInput `json:"inputs,omitzero,omitempty"`
 	// Optional.

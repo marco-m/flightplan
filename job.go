@@ -27,3 +27,13 @@ type Job struct {
 // unambiguously as a "passed" constraint. Thus, we can use its name as handle: returned
 // by [Pipeline.AddJob] and required by [Pipeline.AddJob].
 type JobHandle string
+
+type JobHooks struct {
+	// Optional
+
+	OnSuccess Step `json:"on_success,omitzero"`
+	OnFailure Step `json:"on_failure,omitzero"`
+	OnError   Step `json:"on_error,omitzero"`
+	OnAbort   Step `json:"on_abort,omitzero"`
+	Ensure    Step `json:"ensure,omitzero"`
+}

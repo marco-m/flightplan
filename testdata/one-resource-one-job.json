@@ -1,0 +1,38 @@
+{
+  "resources": [
+    {
+      "name": "flightplan.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git",
+        "branch": "master"
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "bake-pizza",
+      "plan": [
+        {
+          "task": "knead",
+          "config": {
+            "platform": "linux",
+            "image_resource": {
+              "type": "registry-image",
+              "source": {
+                "repository": "alpine"
+              }
+            },
+            "run": {
+              "path": "echo",
+              "args": [
+                "Pizza",
+                "Margherita"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import (
 	"os"
 
 	plan "github.com/marco-m/flightplan"
+	"github.com/marco-m/flightplan/resources"
 )
 
 func main() {
@@ -21,13 +22,24 @@ func main() {
 func buildPipeline() error {
 	pipeline := plan.NewPipeline("simple", os.Args[1:])
 
-	golangImage := plan.AnonymousResource{
-		Source: plan.RegistryImageSource{Repository: "golang"},
+	repo := pipeline.AddResource(resources.Resource{
+		Name: "flightplan.git",
+		// AddResource will set field Type using the method Type() of [plan.GitSource].
+		Source: resources.Git{
+			Uri:    "https://github.com/marco-m/flightplan.git",
+			Branch: "master",
+			Paths:  []string{"ci/*"},
+		},
+	})
+
+	golangImage := resources.AnonymousResource{
+		Source: resources.RegistryImage{Repository: "golang"},
 	}
 
 	pipeline.AddJob(plan.Job{
 		Name: "knead-pizza",
 		Plan: []plan.Step{
+			plan.Get{Get: repo, Trigger: true},
 			plan.Task{
 				Task: "prepare-dough",
 				Config: &plan.TaskConfig{
@@ -50,8 +62,20 @@ func buildPipeline() error {
 					},
 				},
 			},
+			// fp.Put{Resource: s3},
 		},
 	})
+
+	// _, err = pipeline.AddJob("bake-pizza", fp.AddJobArgs{
+	// 	Steps: []fp.Step{
+	// 		fp.Get{Resource: repo, Passed: []*fp.Job{kneadPizzaJob}},
+	// 		fp.Get{Resource: s3},
+	// 		fp.Task{},
+	// 	},
+	// })
+	// if err != nil {
+	// 	return err
+	// }
 
 	return pipeline.Render()
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
+	"github.com/marco-m/flightplan/resources"
 
 	"github.com/marco-m/rosina/assert"
 	"github.com/marco-m/rosina/check"
@@ -18,6 +19,14 @@ import (
 var update = flag.Bool("golden.update", false,
 	"update the golden files for this package; use with -run to update a single test")
 
+var resource = resources.Resource{
+	Name: "flightplan.git",
+	Source: resources.Git{
+		Uri:    "https://github.com/marco-m/flightplan.git",
+		Branch: "master",
+	},
+}
+
 var job = plan.Job{
 	Name: "bake-pizza",
 	Plan: []plan.Step{
@@ -25,8 +34,8 @@ var job = plan.Job{
 			Task: "knead",
 			Config: &plan.TaskConfig{
 				Platform: "linux",
-				ImageResource: plan.AnonymousResource{
-					Source: plan.RegistryImageSource{Repository: "alpine"},
+				ImageResource: resources.AnonymousResource{
+					Source: resources.RegistryImage{Repository: "alpine"},
 				},
 				Run: plan.TaskCommand{
 					Path: "echo",
