@@ -1,0 +1,29 @@
+// Copyright 2026 The Flightplan Authors. All rights reserved.
+// Use of this source code is governed by the MIT license; see the LICENSE file.
+
+package flightplan
+
+type Job struct {
+	// Required. Name is the name of the job. It should be short; shown in the UI and
+	// in URLs. To rename a job and keep the old build logs, use [Job.OldName].
+	Name string `json:"name"`
+	// Required. Plan is the sequence of build [Step]s to execute.
+	Plan []Step `json:"plan"`
+
+	// Optional
+
+	OldName              string   `json:"old_name,omitzero"`
+	Serial               bool     `json:"serial,omitzero"`
+	SerialGroups         []string `json:"serial_groups,omitzero"`
+	MaxInFlight          int      `json:"max_in_flight,omitzero"`
+	BuildLogRetention    string   `json:"build_log_retention,omitzero"`
+	Public               bool     `json:"public,omitzero"`
+	DisableManualTrigger bool     `json:"disable_manual_trigger,omitzero"`
+	DisableReruns        bool     `json:"disable_reruns,omitzero"`
+	Interruptible        bool     `json:"interruptible,omitzero"`
+}
+
+// A job name must be unique per pipeline, otherwhise it could not be resolved
+// unambiguously as a "passed" constraint. Thus, we can use its name as handle: returned
+// by [Pipeline.AddJob] and required by [Pipeline.AddJob].
+type JobHandle string
