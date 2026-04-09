@@ -3,4 +3,4 @@
 #
 ! exec examples-empty
 ! stdout .
-stderr 'render: pipeline cannot be empty'
+stderr 'render: pipeline must have at least one job'

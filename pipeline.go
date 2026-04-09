@@ -4,6 +4,7 @@
 package flightplan
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -16,8 +17,10 @@ import (
 )
 
 var (
-	ErrEmptyPipeline      = errors.New("pipeline cannot be empty")
+	ErrDuplicateJob       = errors.New("pipeline cannot have duplicate job")
+	ErrNoJobs             = errors.New("pipeline must have at least one job")
 	ErrEmptyPipelineName  = errors.New("pipeline name cannot be empty")
+	ErrEmptyJobName       = errors.New("job name cannot be empty")
 	ErrMissingNewPipeline = errors.New("must use NewPipeline to create a pipeline")
 	ErrSystem             = errors.New("unexpected")
 )
@@ -30,6 +33,8 @@ type Pipeline struct {
 	dir string
 	// The name of the pipeline.
 	name string
+	// The object that will be serialized by [Pipeline.Render].
+	po pipelineObject
 	// Errors collected during construction and returned by [Pipeline.Render].
 	errs        []error
 	newPipeline bool // True if instantiated by NewPipeline.
@@ -66,20 +71,53 @@ func NewPipeline(name string, args []string) *Pipeline {
 	return pl
 }
 
+func (pl *Pipeline) AddJob(job Job) JobHandle {
+	if job.Name == "" {
+		pl.errs = append(pl.errs, goof.Wrap("AddJob: %w", ErrEmptyJobName))
+		return ""
+	}
+	for _, j := range pl.po.Jobs {
+		if j.Name == job.Name {
+			pl.errs = append(pl.errs, goof.Wrap("AddJob: %w: %q", ErrDuplicateJob, j.Name))
+		}
+	}
+	pl.po.Jobs = append(pl.po.Jobs, job)
+	return JobHandle(job.Name)
+}
+
 // Render generates the pipeline and writes it by default to the same directory where
 // the program is running. The directory can be changed to a relative or absolute path
-// with the command-line --directory option.
+// with the command-line option --directory.
 // Render retuns all the errors collected during the usage of the flightplan API.
 func (pl *Pipeline) Render() error {
-	pl.errs = append(pl.errs, fmt.Errorf("render: %w", ErrEmptyPipeline))
 	if !pl.newPipeline {
 		// prepend
 		pl.errs = slices.Insert(pl.errs, 0, goof.Wrap("render: %w", ErrMissingNewPipeline))
 	}
-	err := errors.Join(pl.errs...)
+	if len(pl.po.Jobs) == 0 {
+		pl.errs = append(pl.errs, goof.Wrap("render: %w", ErrNoJobs))
+	}
+
+	if err := pl.Errors(); err != nil {
+		return err
+	}
+
+	dstPath := pl.Path()
+	if err := os.MkdirAll(filepath.Dir(dstPath), 0o775); err != nil {
+		return err
+	}
+	wr, err := os.Create(dstPath)
 	if err != nil {
 		return err
 	}
+	defer wr.Close()
+
+	enc := json.NewEncoder(wr)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(pl.po); err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stderr, "wrote pipeline to %s\n", dstPath)
 	return nil
 }
 
@@ -95,6 +133,13 @@ func (pl *Pipeline) Path() string {
 		return filepath.Join(pl.dir, name)
 	}
 	return filepath.Join(pl.cwd, pl.dir, name)
+}
+
+// Errors returns all the errors so far, joined into a single error.
+// Does not drain the errors: [Pipeline.Render] will still return all of them.
+// Client code doesn't need to call this function.
+func (pl *Pipeline) Errors() error {
+	return errors.Join(pl.errs...)
 }
 
 // Parses the command-line and overrides settings in 'pl' based on the parse.
@@ -115,4 +160,10 @@ func parseCommandLine(pl *Pipeline, args []string) {
 		fmt.Fprintf(os.Stderr, "unrecognized arguments: %v\n", strings.Join(fs.Args(), " "))
 		os.Exit(1)
 	}
+}
+
+type pipelineObject struct {
+	// Jobs is the Concourse "jobs" object.
+	// Use [Pipeline.AddJob] to add to it.
+	Jobs []Job `json:"jobs,omitempty"`
 }

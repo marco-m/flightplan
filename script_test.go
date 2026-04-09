@@ -28,6 +28,9 @@ func runScriptTests(t *testing.T, pattern string) {
 	if _, err := goBuild("examples-empty", "./examples/empty", dir); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := goBuild("examples-simple", "./examples/simple", dir); err != nil {
+		t.Fatal(err)
+	}
 	// The script environment variable PATH has meaning similar to PATH for a shell:
 	// an executable  'foo' in PATH can be invoked in a test script with 'exec foo ...'.
 	// That is, we put in PATH the systems under test (SUTs).
@@ -35,6 +38,7 @@ func runScriptTests(t *testing.T, pattern string) {
 		"PATH=" + dir,
 		// "go test -cover" already sets a GOCOVERDIR; we don't want that!
 		"GOCOVERDIR=" + os.Getenv("COVER_INTEGRATION"),
+		// "HOST_PWD=" + os.Getenv("PWD"),
 	}
 
 	engine := &script.Engine{
