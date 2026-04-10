@@ -6,8 +6,6 @@ package goof
 import (
 	"fmt"
 	"runtime"
-
-	"github.com/marco-m/flightplan/internal"
 )
 
 // Wrap creates an error and wraps it with file and line number, in such a way that
@@ -28,5 +26,5 @@ func Wrap(format string, a ...any) error {
 	// See https://pkg.go.dev/log/slog@go1.26.1#example-package-Wrapping
 	_, filePath, line, _ := runtime.Caller(2)
 	err := fmt.Errorf(format, a...)
-	return fmt.Errorf("%s:%d: %w", internal.TrimModule(filePath), line, err)
+	return fmt.Errorf("%s:%d: %w", filePath, line, err)
 }
