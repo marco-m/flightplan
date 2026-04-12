@@ -15,15 +15,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
-      - name: Install Go ${{ env.go-version }}
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.go-version }}
-  
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      # Installing Go must be done AFTER checking out the code, in order to have
+      # caching working!
+      - name: Install Go ${{ env.go-version }}
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.go-version }}
   
       - name: dowload just linux
         if: matrix.os == 'ubuntu-latest'
