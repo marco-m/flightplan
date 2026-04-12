@@ -20,6 +20,6 @@ func main() {
 }
 
 func buildPipeline() error {
-	pipeline := plan.NewPipeline("minimal", os.Args[1:])
+	pipeline := plan.NewPipeline("empty", os.Args[1:])
 	return pipeline.Render()
 }

@@ -21,4 +21,4 @@ Usage: examples-empty [ARGS]
 
 Options:
   -name string
-    	Name of the pipeline file (default "minimal")
+    	Name of the pipeline file (default "empty")

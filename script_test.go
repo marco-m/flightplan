@@ -50,17 +50,20 @@ func runScriptTests(t *testing.T, pattern string) {
 	scripttest.Test(t, ctx, engine, env, pattern)
 }
 
-// Build Go code in 'src', give it 'name', put it in 'dir'. Return path 'dir/name'.
+// Change directory to 'srcDir' and build the Go code there, call the executable 'name',
+// put it in 'dstDir'. Return path 'dstDir/name'.
 // If the tests are invoked from our build script (as opposed to a manual "go test"),
 // also instrument for code coverage.
-func goBuild(name, src, dir string) (string, error) {
-	outPath := filepath.Join(dir, name)
+// Changind directory to 'srcDir' allows to handle the case of multiple Go modules in
+// the same repository.
+func goBuild(name, srcDir, dstDir string) (string, error) {
+	outPath := filepath.Join(dstDir, name)
 	// staticcheck: due to the file's build constraints, runtime.GOOS will never equal "windows"
 	// if runtime.GOOS == "windows" {
 	// 	outPath += ".exe"
 	// }
 
-	args := []string{"build", "-o", outPath}
+	args := []string{"build", "-C", srcDir, "-o", outPath}
 	// -cover: code coverage for integration testing; see https://go.dev/doc/build-cover
 	// We add --cover only if running from our build script (detected by the presence of
 	// the COVER_INTEGRATION env var) to avoid the message:
@@ -69,10 +72,9 @@ func goBuild(name, src, dir string) (string, error) {
 	if os.Getenv("COVER_INTEGRATION") != "" {
 		args = append(args, "-cover")
 	}
-	args = append(args, src)
 	out, err := exec.Command("go", args...).CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("building %s: %s\n%s", src, err, string(out))
+		return "", fmt.Errorf("building %s: %s\n%s", srcDir, err, string(out))
 	}
 	return outPath, err
 }

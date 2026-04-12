@@ -1,6 +1,6 @@
 # https://just.systems
 
-cover_dir := env('PWD') + "/.scratch/cover"
+cover_dir := source_directory() + "/.scratch/cover"
 export COVER_MERGE := cover_dir + "/merge"
 export COVER_UNIT := cover_dir + "/unit"
 export COVER_INTEGRATION := cover_dir + "/integration"
