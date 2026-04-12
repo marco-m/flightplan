@@ -19,7 +19,7 @@ test: clean-coverage
     @ # Show per package coverage data considering unit and integration:
     go tool covdata percent -i=${COVER_UNIT},${COVER_INTEGRATION}
     @ # Merge binary format and then convert to text format (will be used by coverage-browser):
-    @ go tool covdata textfmt -i=${COVER_UNIT},${COVER_INTEGRATION} -o=${COVER_MERGE}/profile
+    go tool covdata textfmt -i=${COVER_UNIT},${COVER_INTEGRATION} -o=${COVER_MERGE}/profile
 
 coverage-browser:
     go tool cover -html=${COVER_MERGE}/profile
