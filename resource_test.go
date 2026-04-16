@@ -103,5 +103,5 @@ func TestPipelineCannotAddDuplicateResource(t *testing.T) {
 
 	err := pipeline.Render()
 
-	assert.ErrorIs(t, err, plan.ErrDuplicateResource, "Render")
+	assert.ErrorIs(t, err, plan.ErrDuplicateResourceName, "Render")
 }

@@ -1,0 +1,120 @@
+#
+# Generate pipeline, default values
+#
+exec examples-two-jobs
+! stdout .
+stderr 'wrote pipeline to /.+/two-jobs.json'
+cmp two-jobs.json two-jobs.want.json
+
+
+-- two-jobs.want.json --
+{
+  "resources": [
+    {
+      "name": "flightplan.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git",
+        "branch": "master",
+        "paths": [
+          "ci/*"
+        ]
+      }
+    },
+    {
+      "name": "artifacts.s3",
+      "type": "s3",
+      "source": {
+        "bucket": ""
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "knead-pizza",
+      "plan": [
+        {
+          "get": "flightplan.git",
+          "trigger": true
+        },
+        {
+          "task": "prepare-dough",
+          "config": {
+            "platform": "linux",
+            "image_resource": {
+              "type": "registry-image",
+              "source": {
+                "repository": "golang"
+              }
+            },
+            "run": {
+              "path": "echo",
+              "args": [
+                "ciccio"
+              ]
+            }
+          }
+        },
+        {
+          "task": "let-dough-rise",
+          "config": {
+            "platform": "linux",
+            "image_resource": {
+              "type": "registry-image",
+              "source": {
+                "repository": "golang"
+              }
+            },
+            "run": {
+              "path": "echo",
+              "args": [
+                "bello"
+              ]
+            }
+          }
+        },
+        {
+          "Resource": "artifacts.s3"
+        }
+      ]
+    },
+    {
+      "name": "bake-pizza",
+      "plan": [
+        {
+          "get": "flightplan.git",
+          "passed": [
+            "knead-pizza"
+          ],
+          "trigger": true
+        },
+        {
+          "get": "artifacts.s3",
+          "passed": [
+            "knead-pizza"
+          ]
+        },
+        {
+          "task": "put-in-hoven",
+          "config": {
+            "platform": "linux",
+            "image_resource": {
+              "type": "registry-image",
+              "source": {
+                "repository": "golang"
+              }
+            },
+            "run": {
+              "path": "echo",
+              "args": [
+                "hot",
+                "hot",
+                "hot"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,16 +19,18 @@ import (
 )
 
 var (
-	ErrDuplicateJob          = errors.New("pipeline cannot have duplicate job")
-	ErrDuplicateResource     = errors.New("pipeline cannot have duplicate resource")
+	ErrMissingNewPipeline    = errors.New("must use NewPipeline to create a pipeline")
+	ErrDuplicateJobName      = errors.New("pipeline cannot have duplicate job name")
+	ErrDuplicateResourceName = errors.New("pipeline cannot have duplicate resource name")
 	ErrNoJobs                = errors.New("pipeline must have at least one job")
 	ErrEmptyPipelineName     = errors.New("pipeline name cannot be empty")
 	ErrEmptyJobName          = errors.New("job name cannot be empty")
 	ErrTaskBothConfigAndFile = errors.New("task cannot have both Config and File")
 	ErrTaskNoConfigNoFile    = errors.New("task must have Config or File")
 	ErrTaskNoName            = errors.New("task field 'Task' cannot be empty")
-	ErrMissingNewPipeline    = errors.New("must use NewPipeline to create a pipeline")
-	ErrSetImageType          = errors.New("ImageResource Type cannot be set (will be set by Source.Type)")
+	ErrImageResource         = errors.New("Config.ImageResource cannot be empty")
+	ErrSetImageResourceType  = errors.New("Config.ImageResource.Type cannot be set (will be set by Source.Type)")
+	ErrImageResourceSource   = errors.New("Config.ImageResource.Source cannot be empty")
 	ErrEmptyResourceName     = errors.New("resource name cannot be empty")
 	ErrSetResourceType       = errors.New("Resource Type cannot be set (will be set by Source.Type)")
 	ErrSystem                = errors.New("system error")
@@ -96,40 +98,48 @@ func (pl *Pipeline) AddJob(job Job) JobHandle {
 	}
 	for i := range job2.Plan {
 		if task, ok := job2.Plan[i].(Task); ok {
-			if task.Task == "" {
-				pl.errs = append(pl.errs, goof.Wrap("AddJob: %w", ErrTaskNoName))
+			if err := validateTask(task); err != nil {
+				pl.errs = append(pl.errs, goof.Wrap("AddJob: Task %q: %w", task.Task, err))
 				return ""
 			}
-			if (task.Config != nil) && task.File != "" {
-				pl.errs = append(pl.errs, goof.Wrap("AddJob: %w", ErrTaskBothConfigAndFile))
-				return ""
-			}
-			if task.Config == nil && task.File == "" {
-				pl.errs = append(pl.errs, goof.Wrap("AddJob: %w", ErrTaskNoConfigNoFile))
-				return ""
-			}
-			if task.Config != nil {
-				imgRes := task.Config.ImageResource
-				if imgRes.Type != "" {
-					pl.errs = append(pl.errs,
-						goof.Wrap("AddJob: Task %s: %w: %q",
-							task.Task, ErrSetImageType, imgRes.Type))
-					return ""
-				}
-				task.Config.ImageResource.Type = task.Config.ImageResource.Source.Type()
-				job2.Plan[i] = task
-			}
-			// if task.File != "" {
-			// }
+			job2.Plan[i] = task
 		}
 	}
 	for _, j := range pl.po.Jobs {
 		if j.Name == job2.Name {
-			pl.errs = append(pl.errs, goof.Wrap("AddJob: %w: %q", ErrDuplicateJob, j.Name))
+			pl.errs = append(pl.errs, goof.Wrap("AddJob: %w: %q", ErrDuplicateJobName, j.Name))
 		}
 	}
 	pl.po.Jobs = append(pl.po.Jobs, job2)
 	return JobHandle(job2.Name)
+}
+
+func validateTask(task Task) error {
+	if task.Task == "" {
+		return ErrTaskNoName
+	}
+	if (task.Config != nil) && task.File != "" {
+		return ErrTaskBothConfigAndFile
+	}
+	if task.Config != nil {
+		if task.Config.ImageResource == nil {
+			return ErrImageResource
+		}
+		imgRes := task.Config.ImageResource
+		if imgRes.Type != "" {
+			return fmt.Errorf("%w: %s", ErrSetImageResourceType, imgRes.Type)
+		}
+		if task.Config.ImageResource.Source == nil {
+			return ErrImageResourceSource
+		}
+		task.Config.ImageResource.Type = task.Config.ImageResource.Source.Type()
+		return nil
+	}
+	if task.File != "" {
+		// TODO
+		return nil
+	}
+	return ErrTaskNoConfigNoFile
 }
 
 // Job returns a copy of the [Job] associated with 'handle'.
@@ -160,7 +170,7 @@ func (pl *Pipeline) AddResource(res resources.Resource) resources.ResourceHandle
 	for _, r := range pl.po.Resources {
 		if r.Name == res.Name {
 			pl.errs = append(pl.errs,
-				goof.Wrap("AddResource: %w: %q", ErrDuplicateResource, r.Name))
+				goof.Wrap("AddResource: %w: %q", ErrDuplicateResourceName, r.Name))
 			return ""
 		}
 	}

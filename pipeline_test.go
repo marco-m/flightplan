@@ -27,23 +27,25 @@ var resource = resources.Resource{
 	},
 }
 
-var job = plan.Job{
-	Name: "bake-pizza",
-	Plan: []plan.Step{
-		plan.Task{
-			Task: "knead",
-			Config: &plan.TaskConfig{
-				Platform: "linux",
-				ImageResource: resources.AnonymousResource{
-					Source: resources.RegistryImage{Repository: "alpine"},
-				},
-				Run: plan.TaskCommand{
-					Path: "echo",
-					Args: []string{"Pizza", "Margherita"},
+func makeTestJob() plan.Job {
+	return plan.Job{
+		Name: "bake-pizza",
+		Plan: []plan.Step{
+			plan.Task{
+				Task: "knead",
+				Config: &plan.TaskConfig{
+					Platform: "linux",
+					ImageResource: &resources.AnonymousResource{
+						Source: resources.RegistryImage{Repository: "alpine"},
+					},
+					Run: plan.TaskCommand{
+						Path: "echo",
+						Args: []string{"Pizza", "Margherita"},
+					},
 				},
 			},
 		},
-	},
+	}
 }
 
 func TestPipelinePath(t *testing.T) {
@@ -84,40 +86,13 @@ func TestPipelineWithoutNameIsInvalid(t *testing.T) {
 func TestPipelineWithOneJobIsValid(t *testing.T) {
 	dir := t.TempDir()
 	pipeline := plan.NewPipeline("one-job", []string{"--directory", dir})
-	pipeline.AddJob(job)
+	pipeline.AddJob(makeTestJob())
 
 	err := pipeline.Render()
 
 	assert.NoError(t, err, "Render")
 	assertRenderedEqualsGolden(t, pipeline.Path(), "testdata/one-job.json", *update)
 }
-
-func TestPipelineJobWithoutNameIsInvalid(t *testing.T) {
-	pipeline := plan.NewPipeline("job-missing-name", nil)
-
-	pipeline.AddJob(plan.Job{})
-	err := pipeline.Render()
-
-	assert.ErrorIs(t, err, plan.ErrEmptyJobName, "Render")
-}
-
-func TestPipelineCannotAddDuplicateJob(t *testing.T) {
-	pipeline := plan.NewPipeline("duplicate-job", nil)
-
-	pipeline.AddJob(job)
-	pipeline.AddJob(job)
-
-	err := pipeline.Render()
-
-	assert.ErrorIs(t, err, plan.ErrDuplicateJob, "Render")
-}
-
-// test lookup via resource handle
-// test lookup via job handle
-// consider exporting Pipeline.Errors() and Resource(handle) and Job(handle)
-// so that I can remove the pipeline private tests.
-
-// test with override from commandline
 
 //
 // Helpers.

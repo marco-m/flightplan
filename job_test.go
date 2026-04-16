@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
-	"github.com/marco-m/flightplan/resources"
 
 	"github.com/marco-m/rosina/assert"
 	"github.com/marco-m/rosina/check"
@@ -42,7 +41,7 @@ func TestAddJobsAndFindThemWithHandles(t *testing.T) {
 	check.Equal(t, job2.Name, "job2", "job2.Name")
 }
 
-func TestAddJobNeedsName(t *testing.T) {
+func TestPipelineJobWithoutNameIsInvalid(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 
 	pipeline.AddJob(plan.Job{
@@ -85,23 +84,35 @@ func TestAddJobTaskCannotHaveBothConfigAndFile(t *testing.T) {
 func TestAddJobTaskConfigCannotHaveImageType(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 
-	pipeline.AddJob(plan.Job{
-		Name: "banana",
-		Plan: []plan.Step{
-			plan.Task{
-				Task: "mango",
-				Config: &plan.TaskConfig{
-					Platform: "",
-					ImageResource: resources.AnonymousResource{
-						Type: "this-will-fail",
-					},
-				},
-			},
-		},
-	})
+	job := makeTestJob()
+	job.Plan[0].(plan.Task).Config.ImageResource.Type = "this-will-fail"
 
-	assert.ErrorIs(t, pipeline.Errors(), plan.ErrSetImageType, "Errors")
+	pipeline.AddJob(job)
+
+	assert.ErrorIs(t, pipeline.Errors(), plan.ErrSetImageResourceType, "Errors")
 	assert.ErrorContains(t, pipeline.Errors(), "this-will-fail", "Errors")
+}
+
+func TestAddJobTaskConfigMustHaveImageResource(t *testing.T) {
+	pipeline := plan.NewPipeline("pizza", nil)
+
+	job := makeTestJob()
+	job.Plan[0].(plan.Task).Config.ImageResource = nil
+
+	pipeline.AddJob(job)
+
+	assert.ErrorIs(t, pipeline.Errors(), plan.ErrImageResource, "Errors")
+}
+
+func TestAddJobTaskConfigMustHaveImageResourceSource(t *testing.T) {
+	pipeline := plan.NewPipeline("pizza", nil)
+
+	job := makeTestJob()
+	job.Plan[0].(plan.Task).Config.ImageResource.Source = nil
+
+	pipeline.AddJob(job)
+
+	assert.ErrorIs(t, pipeline.Errors(), plan.ErrImageResourceSource, "Errors")
 }
 
 func TestAddJobTaskNeedsName(t *testing.T) {
@@ -109,26 +120,26 @@ func TestAddJobTaskNeedsName(t *testing.T) {
 
 	pipeline.AddJob(plan.Job{
 		Name: "banana",
-		Plan: []plan.Step{
-			plan.Task{},
-		},
+		Plan: []plan.Step{plan.Task{}},
 	})
 
 	assert.ErrorIs(t, pipeline.Errors(), plan.ErrTaskNoName, "Errors")
 }
 
-// func TestPipelineCannotAddDuplicateResource(t *testing.T) {
-// 	pipeline := plan.NewPipeline("duplicate-resource", nil)
+func TestPipelineCannotAddDuplicateJob(t *testing.T) {
+	pipeline := plan.NewPipeline("duplicate-job", nil)
 
-// 	resource := plan.Resource{
-// 		Name:   "resource.git",
-// 		Source: plan.GitSource{Uri: "https://github.com/marco-m/resource.git"},
-// 	}
+	job := makeTestJob()
 
-// 	pipeline.AddResource(resource)
-// 	pipeline.AddResource(resource)
+	pipeline.AddJob(job)
+	pipeline.AddJob(job)
 
-// 	err := pipeline.Render()
+	err := pipeline.Render()
 
-// 	assert.ErrorIs(t, err, plan.ErrDuplicateResource, "Render")
-// }
+	assert.ErrorIs(t, err, plan.ErrDuplicateJobName, "Render")
+	assert.ErrorContains(t, err, job.Name, "job.Name")
+}
+
+// TODO
+func TestJobMustHaveOrImageResourceOrTaskImageButNotBoth(t *testing.T) {
+}

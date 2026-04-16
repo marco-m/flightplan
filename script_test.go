@@ -31,6 +31,9 @@ func runScriptTests(t *testing.T, pattern string) {
 	if _, err := goBuild("examples-simple", "./examples/simple", dir); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := goBuild("examples-two-jobs", "./examples/two-jobs", dir); err != nil {
+		t.Fatal(err)
+	}
 	// The script environment variable PATH has meaning similar to PATH for a shell:
 	// an executable  'foo' in PATH can be invoked in a test script with 'exec foo ...'.
 	// That is, we put in PATH the systems under test (SUTs).

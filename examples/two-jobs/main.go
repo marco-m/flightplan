@@ -1,7 +1,7 @@
 // Copyright 2026 The Flightplan Authors. All rights reserved.
 // Use of this source code is governed by the MIT license; see the LICENSE file.
 
-// Example of building a simple pipeline with flightplan.
+// Example of building a two jobs pipeline with flightplan.
 package main
 
 import (
@@ -20,7 +20,7 @@ func main() {
 }
 
 func buildPipeline() error {
-	pipeline := plan.NewPipeline("simple", os.Args[1:])
+	pipeline := plan.NewPipeline("two-jobs", os.Args[1:])
 
 	repo := pipeline.AddResource(resources.Resource{
 		Name: "flightplan.git",
@@ -32,11 +32,19 @@ func buildPipeline() error {
 		},
 	})
 
+	s3 := pipeline.AddResource(resources.Resource{
+		Name: "artifacts.s3",
+		// AddResource will set field Type using the method Type() of [plan.S3Source].
+		Source: resources.S3{
+			// FIXME
+		},
+	})
+
 	golangImage := resources.AnonymousResource{
 		Source: resources.RegistryImage{Repository: "golang"},
 	}
 
-	pipeline.AddJob(plan.Job{
+	kneadPizza := pipeline.AddJob(plan.Job{
 		Name: "knead-pizza",
 		Plan: []plan.Step{
 			plan.Get{Get: repo, Trigger: true},
@@ -62,20 +70,35 @@ func buildPipeline() error {
 					},
 				},
 			},
-			// fp.Put{Resource: s3},
+			plan.Put{Resource: s3},
 		},
 	})
 
-	// _, err = pipeline.AddJob("bake-pizza", fp.AddJobArgs{
-	// 	Steps: []fp.Step{
-	// 		fp.Get{Resource: repo, Passed: []*fp.Job{kneadPizzaJob}},
-	// 		fp.Get{Resource: s3},
-	// 		fp.Task{},
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	pipeline.AddJob(plan.Job{
+		Name: "bake-pizza",
+		Plan: []plan.Step{
+			plan.Get{
+				Get:     repo,
+				Passed:  []plan.JobHandle{kneadPizza},
+				Trigger: true,
+			},
+			plan.Get{
+				Get:    s3,
+				Passed: []plan.JobHandle{kneadPizza},
+			},
+			plan.Task{
+				Task: "put-in-hoven",
+				Config: &plan.TaskConfig{
+					Platform:      "linux",
+					ImageResource: &golangImage,
+					Run: plan.TaskCommand{
+						Path: "echo",
+						Args: []string{"hot", "hot", "hot"},
+					},
+				},
+			},
+		},
+	})
 
 	return pipeline.Render()
 }

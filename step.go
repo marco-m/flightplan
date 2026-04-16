@@ -3,7 +3,9 @@
 
 package flightplan
 
-import "github.com/marco-m/flightplan/resources"
+import (
+	"github.com/marco-m/flightplan/resources"
+)
 
 // Step is a step in a [Job.Plan]. You compose the plan using the following concrete
 // steps: [Task], [Get], [Put], [SetPipeline], [InParallel], [Do], [Try], [Loadvar].
@@ -58,7 +60,7 @@ type TaskConfig struct {
 	Platform string `json:"platform,omitzero"`
 
 	// Optional. The container image to run with. Prefer instead [Task.Image].
-	ImageResource resources.AnonymousResource `json:"image_resource,omitzero"`
+	ImageResource *resources.AnonymousResource `json:"image_resource,omitzero"`
 	// Optional.
 	Inputs []TaskInput `json:"inputs,omitzero,omitempty"`
 	// Optional.

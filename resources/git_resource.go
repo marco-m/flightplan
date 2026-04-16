@@ -7,7 +7,7 @@ package resources
 // See https://github.com/concourse/git-resource for details.
 type Git struct {
 	// Required. The location of the repository.
-	Uri string `json:"uri,omitzero"`
+	Uri string `json:"uri"`
 	// Optional. The branch to track.
 	Branch string `json:"branch,omitzero"`
 	// Optional. If specified (as a list of glob patterns), only changes to the
@@ -30,6 +30,6 @@ type GitSourceTunnel struct {
 
 var _ Source = (*Git)(nil)
 
-func (src Git) Source() {}
+func (git Git) Source() {}
 
-func (src Git) Type() string { return "git" }
+func (git Git) Type() string { return "git" }
