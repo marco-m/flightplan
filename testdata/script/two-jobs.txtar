@@ -25,7 +25,8 @@ cmp two-jobs.json two-jobs.want.json
       "name": "artifacts.s3",
       "type": "s3",
       "source": {
-        "bucket": ""
+        "bucket": "concourse",
+        "regexp": "builds/simple-s3/gift-(.*)"
       }
     }
   ],

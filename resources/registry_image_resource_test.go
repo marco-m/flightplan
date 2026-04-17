@@ -10,7 +10,13 @@ import (
 	"github.com/marco-m/rosina/assert"
 )
 
-func TestRegistryImageResourceType(t *testing.T) {
+func TestRegistryImageType(t *testing.T) {
 	sut := resources.RegistryImage{}
 	assert.Equal(t, sut.Type(), "registry-image", "Type")
+}
+
+func TestRegistryImageValidate(t *testing.T) {
+	sut := resources.RegistryImage{}
+	err := sut.Validate()
+	assert.ErrorContains(t, err, "RegistryImage.Repository cannot be empty", "Validate")
 }

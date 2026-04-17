@@ -10,7 +10,13 @@ import (
 	"github.com/marco-m/rosina/assert"
 )
 
-func TestGitResourceType(t *testing.T) {
+func TestGitType(t *testing.T) {
 	sut := resources.Git{}
 	assert.Equal(t, sut.Type(), "git", "Type")
+}
+
+func TestGitValidate(t *testing.T) {
+	sut := resources.Git{}
+	err := sut.Validate()
+	assert.ErrorContains(t, err, "Git.Uri cannot be empty", "Validate")
 }

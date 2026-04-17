@@ -10,7 +10,30 @@ import (
 	"github.com/marco-m/rosina/assert"
 )
 
-func TestS3ResourceType(t *testing.T) {
+func TestS3Type(t *testing.T) {
 	sut := resources.S3{}
 	assert.Equal(t, sut.Type(), "s3", "Type")
+}
+
+func TestS3Validate(t *testing.T) {
+	test := func(desc string, sut resources.S3, wantErrs []error) {
+		t.Helper()
+		err := sut.Validate()
+		for _, want := range wantErrs {
+			assert.ErrorIs(t, err, want, desc)
+		}
+	}
+
+	test("zero resource", resources.S3{},
+		[]error{
+			resources.ErrS3MissingBucket,
+			resources.ErrS3NoRegexpNoVersionedFile,
+		})
+	test("incompatible fields",
+		resources.S3{
+			Bucket:        "banana",
+			Regexp:        "mango",
+			VersionedFile: "berry",
+		},
+		[]error{resources.ErrS3BothRegexpAndVersionedFile})
 }

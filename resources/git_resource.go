@@ -3,6 +3,8 @@
 
 package resources
 
+import "fmt"
+
 // Git gets and puts commits in a git repository.
 // See https://github.com/concourse/git-resource for details.
 type Git struct {
@@ -33,3 +35,10 @@ var _ Source = (*Git)(nil)
 func (git Git) Source() {}
 
 func (git Git) Type() string { return "git" }
+
+func (git Git) Validate() error {
+	if git.Uri == "" {
+		return fmt.Errorf("Git.Uri cannot be empty")
+	}
+	return nil
+}

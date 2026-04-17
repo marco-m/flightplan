@@ -36,7 +36,8 @@ func buildPipeline() error {
 		Name: "artifacts.s3",
 		// AddResource will set field Type using the method Type() of [plan.S3Source].
 		Source: resources.S3{
-			// FIXME
+			Bucket: "concourse",
+			Regexp: "builds/simple-s3/gift-(.*)",
 		},
 	})
 

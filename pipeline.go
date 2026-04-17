@@ -31,8 +31,10 @@ var (
 	ErrImageResource         = errors.New("Config.ImageResource cannot be empty")
 	ErrSetImageResourceType  = errors.New("Config.ImageResource.Type cannot be set (will be set by Source.Type)")
 	ErrImageResourceSource   = errors.New("Config.ImageResource.Source cannot be empty")
-	ErrEmptyResourceName     = errors.New("resource name cannot be empty")
+	ErrEmptyResourceName     = errors.New("Resource Name cannot be empty")
 	ErrSetResourceType       = errors.New("Resource Type cannot be set (will be set by Source.Type)")
+	ErrSourceValidation      = errors.New("validating Source")
+	ErrMissingSource         = errors.New("Source cannot be empty")
 	ErrSystem                = errors.New("system error")
 	ErrInternal              = errors.New("flightplan internal error, please report")
 )
@@ -163,14 +165,24 @@ func (pl *Pipeline) AddResource(res resources.Resource) resources.ResourceHandle
 	}
 	if res.Type != "" {
 		pl.errs = append(pl.errs,
-			goof.Wrap("AddResource: %w: %q", ErrSetResourceType, res.Type))
+			goof.Wrap("AddResource: %s: %w: %q", res.Name, ErrSetResourceType, res.Type))
+		return ""
+	}
+	if res.Source == nil {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %s: %w", res.Name, ErrMissingSource))
+		return ""
+	}
+	if err := res.Source.Validate(); err != nil {
+		pl.errs = append(pl.errs,
+			goof.Wrap("AddResource: %s: %w: %w", res.Name, ErrSourceValidation, err))
 		return ""
 	}
 	res.Type = res.Source.Type()
 	for _, r := range pl.po.Resources {
 		if r.Name == res.Name {
 			pl.errs = append(pl.errs,
-				goof.Wrap("AddResource: %w: %q", ErrDuplicateResourceName, r.Name))
+				goof.Wrap("AddResource: %s: %w", res.Name, ErrDuplicateResourceName))
 			return ""
 		}
 	}

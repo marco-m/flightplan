@@ -40,13 +40,15 @@ type AnonymousResource struct {
 
 // Source is the "source" object in a Concourse [Resource] or [AnonymousResource].
 type Source interface {
-	// Confirm that the struct is actually a [Source].
+	// Source confirms that the struct is actually a [Source].
 	// Exported to allow custom resources to be defined outside of the flightplan module.
 	Source()
-	// The mandatory resource type, used by [Pipeline.AddResource] to set field
-	// [Resource.Type] of the outer resorce. Setting [Resource.Type] directly will be
-	// considered an error.
+	// Type returns the mandatory resource type, used by [Pipeline.AddResource] to set
+	// field [Resource.Type] of the outer resorce. Setting [Resource.Type] directly will
+	// be considered an error.
 	Type() string
+	// Validate that the fields of the [Source] implementation are correct.
+	Validate() error
 }
 
 // Params is the "params" object in a Concourse [Resource] or [AnonymousResource].

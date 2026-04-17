@@ -90,6 +90,27 @@ func TestAddResourceWithTypeAlreadySetFails(t *testing.T) {
 	assert.ErrorIs(t, pipeline.Errors(), plan.ErrSetResourceType, "Errors")
 }
 
+func TestAddResourceSourceCannotBeEmpty(t *testing.T) {
+	pipeline := plan.NewPipeline("pizza", nil)
+
+	pipeline.AddResource(resources.Resource{Name: "banana"})
+
+	assert.ErrorIs(t, pipeline.Errors(), plan.ErrMissingSource, "Errors")
+}
+
+func TestAddResourceSourceValidationFails(t *testing.T) {
+	pipeline := plan.NewPipeline("pizza", nil)
+
+	pipeline.AddResource(resources.Resource{
+		Name:   "banana",
+		Source: resources.S3{},
+	})
+
+	err := pipeline.Errors()
+	assert.ErrorIs(t, err, plan.ErrSourceValidation, "Errors")
+	assert.ErrorContains(t, err, "field Bucket cannot be empty", "Errors")
+}
+
 func TestPipelineCannotAddDuplicateResource(t *testing.T) {
 	pipeline := plan.NewPipeline("duplicate-resource", nil)
 

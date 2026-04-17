@@ -3,6 +3,10 @@
 
 package resources
 
+import (
+	"errors"
+)
+
 // S3 is a resource for interacting with S3-compatible object storage.
 // See https://github.com/concourse/s3-resource
 type S3 struct {
@@ -32,3 +36,23 @@ var _ Source = (*S3)(nil)
 func (s3 S3) Source() {}
 
 func (s3 S3) Type() string { return "s3" }
+
+var (
+	ErrS3MissingBucket              = errors.New("field Bucket cannot be empty")
+	ErrS3NoRegexpNoVersionedFile    = errors.New("one of the following fields must be filled: Regexp, VersionedFile")
+	ErrS3BothRegexpAndVersionedFile = errors.New("one of the fields Regexp or VersionedFile must be filled, not both")
+)
+
+func (s3 S3) Validate() error {
+	var errs []error
+	if s3.Bucket == "" {
+		errs = append(errs, ErrS3MissingBucket)
+	}
+	if s3.Regexp == "" && s3.VersionedFile == "" {
+		errs = append(errs, ErrS3NoRegexpNoVersionedFile)
+	}
+	if s3.Regexp != "" && s3.VersionedFile != "" {
+		errs = append(errs, ErrS3BothRegexpAndVersionedFile)
+	}
+	return errors.Join(errs...)
+}

@@ -3,6 +3,8 @@
 
 package resources
 
+import "fmt"
+
 // See https://github.com/concourse/registry-image-resource
 type RegistryImage struct {
 	// Required. The URI of the image repository, e.g. alpine or ghcr.io/package/image.
@@ -14,6 +16,13 @@ type RegistryImage struct {
 
 var _ Source = (*RegistryImage)(nil)
 
-func (ris RegistryImage) Source() {}
+func (rim RegistryImage) Source() {}
 
-func (ris RegistryImage) Type() string { return "registry-image" }
+func (rim RegistryImage) Type() string { return "registry-image" }
+
+func (rim RegistryImage) Validate() error {
+	if rim.Repository == "" {
+		return fmt.Errorf("RegistryImage.Repository cannot be empty")
+	}
+	return nil
+}
