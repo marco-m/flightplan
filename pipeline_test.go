@@ -104,8 +104,13 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 	s3 := pipeline.AddResource(resources.Resource{
 		Name: "artifacts.s3",
 		Source: resources.S3{
-			Bucket: "concourse",
-			Regexp: "builds/simple-s3/gift-(.*)",
+			Bucket:          "concourse",
+			Regexp:          "builds/simple-s3/gift-(.*)",
+			Endpoint:        "((s3-endpoint))",
+			RegionName:      "((s3-region))",
+			AccessKeyID:     "((s3-access-key))",
+			SecretAccessKey: "((s3-secret-key))",
+			UsePathStyle:    true,
 		},
 	})
 	alpineImage := resources.AnonymousResource{
@@ -120,10 +125,29 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
 					ImageResource: &alpineImage,
-					Run:           plan.TaskCommand{Path: "env"},
+					Outputs: []plan.TaskOutput{
+						{Name: "gift"},
+					},
+					Run: plan.TaskCommand{
+						Path: "sh",
+						Args: []string{
+							"-c",
+							`set -e
+set -x
+VERSION=$(date +%Y%m%d%H%M%S)
+GIFT=gift/gift-$VERSION
+echo "hello" > $GIFT
+`,
+						},
+					},
 				},
 			},
-			plan.Put{Put: s3},
+			plan.Put{
+				Put: s3,
+				Params: resources.S3PutParams{
+					File: "gift/gift-*",
+				},
+			},
 		},
 	})
 	pipeline.AddJob(plan.Job{
@@ -132,7 +156,7 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 			plan.Get{Get: repo, Passed: []plan.JobHandle{kneadPizza}, Trigger: true},
 			plan.Get{Get: s3, Passed: []plan.JobHandle{kneadPizza}},
 			plan.Task{
-				Task: "put-in-hoven",
+				Task: "insert-in-hoven",
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
 					ImageResource: &alpineImage,
@@ -149,7 +173,7 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 }
 
 func TestPipelineGetStepValidateFailure(t *testing.T) {
-	test := func(resHandle resources.Handle) {
+	test := func(desc string, resHandle *resources.Handle) {
 		dir := t.TempDir()
 		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
 		pipeline.AddJob(plan.Job{
@@ -161,12 +185,13 @@ func TestPipelineGetStepValidateFailure(t *testing.T) {
 		assert.ErrorIs(t, err, plan.ErrGetValidation, "Render")
 	}
 
-	test("")
-	test("non-existing")
+	test("nil handle", nil)
+	test("missing name", &resources.Handle{})
+	test("non-existing name", &resources.Handle{Resource: resources.Resource{Name: "banana"}})
 }
 
 func TestPipelinePutStepValidateFailure(t *testing.T) {
-	test := func(resHandle resources.Handle) {
+	test := func(desc string, resHandle *resources.Handle) {
 		dir := t.TempDir()
 		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
 		pipeline.AddJob(plan.Job{
@@ -178,8 +203,9 @@ func TestPipelinePutStepValidateFailure(t *testing.T) {
 		assert.ErrorIs(t, err, plan.ErrPutValidation, "Render")
 	}
 
-	test("")
-	test("non-existing")
+	test("nil handle", nil)
+	test("missing name", &resources.Handle{})
+	test("non-existing name", &resources.Handle{Resource: resources.Resource{Name: "banana"}})
 }
 
 //

@@ -1,0 +1,37 @@
+#
+# Report error if cannot create directory
+#
+! exec examples-simple -directory /mango
+! stdout .
+stderr 'error: mkdir /mango:'
+
+#
+# Report error if cannot create file
+#
+! exec examples-simple -directory /
+! stdout .
+stderr 'error: open /simple.json:'
+
+#
+# Generate pipeline, default values
+#
+exec examples-simple
+! stdout .
+stderr 'wrote pipeline to /.+/simple.json'
+cmp simple.json $TESTDATA/script/examples/simple.want.json
+
+#
+# Generate pipeline, override name and directory, relative path
+#
+exec examples-simple -name banana -directory mango
+! stdout .
+stderr 'wrote pipeline to /.+/mango/banana.json'
+cmp mango/banana.json $TESTDATA/script/examples/simple.want.json
+
+#
+# Generate pipeline, override name and directory, absolute path
+#
+exec examples-simple -name banana -directory $WORK/mango
+! stdout .
+stderr 'wrote pipeline to /.+/mango/banana.json'
+cmp $WORK/mango/banana.json $TESTDATA/script/examples/simple.want.json

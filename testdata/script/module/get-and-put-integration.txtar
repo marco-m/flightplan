@@ -1,0 +1,21 @@
+#
+# Integration tests against Concourse
+#
+[!concourse] skip
+env FLY_HOME=.
+
+# login
+fly -t dev login -c http://localhost:8080 --username=main --password=main --team-name=main
+stdout 'logging in to team'
+stdout 'target saved'
+
+# set-pipeline
+fly -t dev set-pipeline --non-interactive -p get-and-put -c $TESTDATA/get-and-put.json
+
+# unpause-pipeline
+fly -t dev unpause-pipeline -p get-and-put
+
+# trigger-job, will take ages
+sleep 100ms
+fly -t dev trigger-job -j get-and-put/knead-pizza --watch
+stdout 'succeeded'

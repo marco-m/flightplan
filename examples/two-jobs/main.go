@@ -28,7 +28,6 @@ func buildPipeline() error {
 		Source: resources.Git{
 			Uri:    "https://github.com/marco-m/flightplan.git",
 			Branch: "master",
-			Paths:  []string{"ci/*"},
 		},
 	})
 
@@ -37,12 +36,18 @@ func buildPipeline() error {
 		// AddResource will set field Type using the method Type() of [plan.S3Source].
 		Source: resources.S3{
 			Bucket: "concourse",
-			Regexp: "builds/simple-s3/gift-(.*)",
+			// convention: builds/<pipeline-name>/<versioned-package-name>
+			Regexp:          "builds/simple-s3/gift-(.*)",
+			Endpoint:        "((s3-endpoint))",
+			RegionName:      "((s3-region))",
+			AccessKeyID:     "((s3-access-key))",
+			SecretAccessKey: "((s3-secret-key))",
+			UsePathStyle:    true,
 		},
 	})
 
-	golangImage := resources.AnonymousResource{
-		Source: resources.RegistryImage{Repository: "golang"},
+	alpineImage := resources.AnonymousResource{
+		Source: resources.RegistryImage{Repository: "alpine"},
 	}
 
 	kneadPizza := pipeline.AddJob(plan.Job{
@@ -53,25 +58,30 @@ func buildPipeline() error {
 				Task: "prepare-dough",
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
-					ImageResource: &golangImage,
+					ImageResource: &alpineImage,
+					Outputs: []plan.TaskOutput{
+						{Name: "gift"},
+					},
 					Run: plan.TaskCommand{
-						Path: "echo",
-						Args: []string{"ciccio"},
+						Path: "sh",
+						Args: []string{
+							"-c",
+							`set -e
+set -x
+VERSION=$(date +%Y%m%d%H%M%S)
+GIFT=gift/gift-$VERSION
+echo "hello" > $GIFT
+`,
+						},
 					},
 				},
 			},
-			plan.Task{
-				Task: "let-dough-rise",
-				Config: &plan.TaskConfig{
-					Platform:      "linux",
-					ImageResource: &golangImage,
-					Run: plan.TaskCommand{
-						Path: "echo",
-						Args: []string{"bello"},
-					},
+			plan.Put{
+				Put: s3,
+				Params: resources.S3PutParams{
+					File: "gift/gift-*",
 				},
 			},
-			plan.Put{Put: s3},
 		},
 	})
 
@@ -88,10 +98,10 @@ func buildPipeline() error {
 				Passed: []plan.JobHandle{kneadPizza},
 			},
 			plan.Task{
-				Task: "put-in-hoven",
+				Task: "place-in-hoven",
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
-					ImageResource: &golangImage,
+					ImageResource: &alpineImage,
 					Run: plan.TaskCommand{
 						Path: "echo",
 						Args: []string{"hot", "hot", "hot"},

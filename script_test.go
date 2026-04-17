@@ -20,7 +20,11 @@ import (
 )
 
 func TestScriptExamples(t *testing.T) {
-	runScriptTests(t, "testdata/script/*.txtar")
+	runScriptTests(t, "testdata/script/examples/*.txtar")
+}
+
+func TestScriptModule(t *testing.T) {
+	runScriptTests(t, "testdata/script/module/*.txtar")
 }
 
 func runScriptTests(t *testing.T, pattern string) {
@@ -41,7 +45,8 @@ func runScriptTests(t *testing.T, pattern string) {
 		"PATH=" + dir,
 		// "go test -cover" already sets a GOCOVERDIR; we don't want that!
 		"GOCOVERDIR=" + os.Getenv("COVER_INTEGRATION"),
-		// "HOST_PWD=" + os.Getenv("PWD"),
+		// fragile but maybe good enough?
+		"TESTDATA=" + filepath.Join(os.Getenv("PWD"), "testdata"),
 	}
 
 	engine := &script.Engine{
@@ -49,11 +54,14 @@ func runScriptTests(t *testing.T, pattern string) {
 		Conds: scripttest.DefaultConds(),
 		Quiet: !testing.Verbose(),
 	}
+	engine.Conds["concourse"] = script.BoolCondition("env var FLIGHTPLAN_CONCOURSE is set",
+		os.Getenv("FLIGHTPLAN_CONCOURSE") != "")
 
 	// Make an executable found in the host PATH available to the test script for
 	// direct invocation (will also show in the help output). Contrast above with
 	// putting a custom-built executable with goBuild into env["PATH"].
 	engine.Cmds["ls"] = script.Program("ls", nil, 100*time.Millisecond)
+	engine.Cmds["fly"] = script.Program("fly", nil, 100*time.Millisecond)
 
 	ctx := context.Background()
 	scripttest.Test(t, ctx, engine, env, pattern)

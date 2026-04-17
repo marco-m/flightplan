@@ -28,12 +28,11 @@ func buildPipeline() error {
 		Source: resources.Git{
 			Uri:    "https://github.com/marco-m/flightplan.git",
 			Branch: "master",
-			Paths:  []string{"ci/*"},
 		},
 	})
 
-	golangImage := resources.AnonymousResource{
-		Source: resources.RegistryImage{Repository: "golang"},
+	alpineImage := resources.AnonymousResource{
+		Source: resources.RegistryImage{Repository: "alpine"},
 	}
 
 	pipeline.AddJob(plan.Job{
@@ -44,7 +43,7 @@ func buildPipeline() error {
 				Task: "prepare-dough",
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
-					ImageResource: &golangImage,
+					ImageResource: &alpineImage,
 					Run: plan.TaskCommand{
 						Path: "echo",
 						Args: []string{"ciccio"},
@@ -55,27 +54,15 @@ func buildPipeline() error {
 				Task: "let-dough-rise",
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
-					ImageResource: &golangImage,
+					ImageResource: &alpineImage,
 					Run: plan.TaskCommand{
 						Path: "echo",
 						Args: []string{"bello"},
 					},
 				},
 			},
-			// fp.Put{Resource: s3},
 		},
 	})
-
-	// _, err = pipeline.AddJob("bake-pizza", fp.AddJobArgs{
-	// 	Steps: []fp.Step{
-	// 		fp.Get{Resource: repo, Passed: []*fp.Job{kneadPizzaJob}},
-	// 		fp.Get{Resource: s3},
-	// 		fp.Task{},
-	// 	},
-	// })
-	// if err != nil {
-	// 	return err
-	// }
 
 	return pipeline.Render()
 }

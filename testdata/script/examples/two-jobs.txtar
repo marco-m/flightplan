@@ -1,0 +1,7 @@
+#
+# Generate pipeline, default values
+#
+exec examples-two-jobs
+! stdout .
+stderr 'wrote pipeline to /.+/two-jobs.json'
+cmp two-jobs.json $TESTDATA/script/examples/two-jobs.want.json

@@ -128,44 +128,44 @@ func (pl *Pipeline) Job(handle JobHandle) (res Job, found bool) {
 
 // AddResource adds resource 'res' to the pipeline. Any error will be returned by
 // [Pipeline.Render].
-func (pl *Pipeline) AddResource(res resources.Resource) resources.Handle {
+func (pl *Pipeline) AddResource(res resources.Resource) *resources.Handle {
 	if res.Name == "" {
 		pl.errs = append(pl.errs,
 			goof.Wrap("AddResource: %w", ErrEmptyResourceName))
-		return ""
+		return nil
 	}
 	if res.Type != "" {
 		pl.errs = append(pl.errs,
 			goof.Wrap("AddResource: %s: %w: %q", res.Name, ErrSetResourceType, res.Type))
-		return ""
+		return nil
 	}
 	if res.Source == nil {
 		pl.errs = append(pl.errs,
 			goof.Wrap("AddResource: %s: %w", res.Name, ErrMissingSource))
-		return ""
+		return nil
 	}
 	if err := res.Source.Validate(); err != nil {
 		pl.errs = append(pl.errs,
 			goof.Wrap("AddResource: %s: %w: %w", res.Name, ErrSourceValidation, err))
-		return ""
+		return nil
 	}
 	res.Type = res.Source.Type()
 	for _, r := range pl.po.Resources {
 		if r.Name == res.Name {
 			pl.errs = append(pl.errs,
 				goof.Wrap("AddResource: %s: %w", res.Name, ErrDuplicateResourceName))
-			return ""
+			return nil
 		}
 	}
 	pl.po.Resources = append(pl.po.Resources, res)
-	return resources.Handle(res.Name)
+	return &resources.Handle{Resource: res}
 }
 
 // Resource returns a copy of the [Resource] associated with 'handle'.
 // Client code doesn't need to call this function.
-func (pl *Pipeline) Resource(handle resources.Handle) (res resources.Resource, found bool) {
+func (pl *Pipeline) Resource(handle *resources.Handle) (res resources.Resource, found bool) {
 	for _, r := range pl.po.Resources {
-		if resources.Handle(r.Name) == handle {
+		if r.Name == handle.Name {
 			return r, true
 		}
 	}

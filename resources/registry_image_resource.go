@@ -3,7 +3,11 @@
 
 package resources
 
-import "fmt"
+import (
+	"fmt"
+)
+
+var _ Source = (*RegistryImage)(nil)
 
 // See https://github.com/concourse/registry-image-resource
 type RegistryImage struct {
@@ -14,9 +18,7 @@ type RegistryImage struct {
 	// Optional
 }
 
-var _ Source = (*RegistryImage)(nil)
-
-func (rim RegistryImage) Source() {}
+func (rim RegistryImage) IsSource() {}
 
 func (rim RegistryImage) Type() string { return "registry-image" }
 
@@ -24,5 +26,13 @@ func (rim RegistryImage) Validate() error {
 	if rim.Repository == "" {
 		return fmt.Errorf("RegistryImage.Repository cannot be empty")
 	}
+	return nil
+}
+
+func (rim RegistryImage) ValidateGet(params GetParams) error {
+	return nil
+}
+
+func (rim RegistryImage) ValidatePut(params PutParams) error {
 	return nil
 }

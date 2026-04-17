@@ -12,7 +12,12 @@
       "type": "s3",
       "source": {
         "bucket": "concourse",
-        "regexp": "builds/simple-s3/gift-(.*)"
+        "regexp": "builds/simple-s3/gift-(.*)",
+        "endpoint": "((s3-endpoint))",
+        "region_name": "((s3-region))",
+        "access_key_id": "((s3-access-key))",
+        "secret_access_key": "((s3-secret-key))",
+        "use_path_style": true
       }
     }
   ],
@@ -34,13 +39,25 @@
                 "repository": "alpine"
               }
             },
+            "outputs": [
+              {
+                "name": "gift"
+              }
+            ],
             "run": {
-              "path": "env"
+              "path": "sh",
+              "args": [
+                "-c",
+                "set -e\nset -x\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
+              ]
             }
           }
         },
         {
-          "put": "artifacts.s3"
+          "put": "artifacts.s3",
+          "params": {
+            "file": "gift/gift-*"
+          }
         }
       ]
     },
@@ -61,7 +78,7 @@
           ]
         },
         {
-          "task": "put-in-hoven",
+          "task": "insert-in-hoven",
           "config": {
             "platform": "linux",
             "image_resource": {

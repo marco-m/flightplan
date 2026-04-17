@@ -14,6 +14,10 @@ import (
 type Step interface {
 	// Confirm that the struct is actually a [Step] (sealed interface).
 	step()
+	// Validate verifies that a step implementation is valid, by being aware of the
+	// step type and of the referenced resources.
+	// For example: a put step to a resource is aware of the resource type (s3, git, ...)
+	// and validates the resource-specific "params" object.
 	Validate(pl *Pipeline) error
 }
 
@@ -22,29 +26,29 @@ type Step interface {
 // See https://concourse-ci.org/docs/steps/get/
 type Get struct {
 	// Required. Get is the resource to get from.
-	Get resources.Handle `json:"get"`
+	Get *resources.Handle `json:"get"`
 
 	// Optional
 
 	// Resource ResourceHandle `json:"resource,omitzero"` // I don't understand this one
-	Passed  []JobHandle       `json:"passed,omitzero"`
-	Trigger bool              `json:"trigger,omitzero"`
-	Params  map[string]string `json:"params,omitzero"`
-	Version string            `json:"version,omitzero"`
+	Passed  []JobHandle         `json:"passed,omitzero"`
+	Trigger bool                `json:"trigger,omitzero"`
+	Params  resources.GetParams `json:"params,omitzero"`
+	Version string              `json:"version,omitzero"`
 }
 
 func (Get) step() {}
 
 func (get Get) Validate(pl *Pipeline) error {
-	if get.Get == "" {
+	if get.Get == nil {
 		return fmt.Errorf("%w: field Get cannot be empty", ErrGetValidation)
 	}
 	for _, res := range pl.po.Resources {
-		if res.Name == string(get.Get) {
+		if res.Name == get.Get.Name {
 			return nil
 		}
 	}
-	return fmt.Errorf("%w: field Get: unknown resource %q", ErrGetValidation, get.Get)
+	return fmt.Errorf("%w: field Get: unknown resource %q", ErrGetValidation, get.Get.Name)
 }
 
 // Put implements [Step].
@@ -52,21 +56,34 @@ func (get Get) Validate(pl *Pipeline) error {
 // See https://concourse-ci.org/docs/steps/put/
 type Put struct {
 	// Required. Put is the resource to put to.
-	Put resources.Handle `json:"put"`
+	Put *resources.Handle `json:"put"`
+	// Params represents an arbitrary configuration to pass to the resource.
+	// Refer to the resource type's documentation to see what it supports.
+	// Params map[string]any `json:"params,omitzero"`
+	Params resources.PutParams `json:"params,omitzero"`
 }
 
 func (Put) step() {}
 
 func (put Put) Validate(pl *Pipeline) error {
-	if put.Put == "" {
+	if put.Put == nil {
 		return fmt.Errorf("%w: field Put cannot be empty", ErrPutValidation)
 	}
+	found := false
 	for _, res := range pl.po.Resources {
-		if res.Name == string(put.Put) {
-			return nil
+		if res.Name == put.Put.Name {
+			found = true
+			break
 		}
 	}
-	return fmt.Errorf("%w: field Put: unknown resource %q", ErrPutValidation, put.Put)
+	if !found {
+		return fmt.Errorf("%w: field Put: unknown resource %q",
+			ErrPutValidation, put.Put.Name)
+	}
+	if err := put.Put.Source.ValidatePut(put.Params); err != nil {
+		return fmt.Errorf("Put %s: %w", put.Put.Name, err)
+	}
+	return nil
 }
 
 // Task implements [Step].
@@ -132,7 +149,11 @@ type TaskConfig struct {
 
 type TaskInput struct{}
 
-type TaskOutput struct{}
+// https://concourse-ci.org/docs/tasks/#output-schema
+type TaskOutput struct {
+	Name string `json:"name"`
+	Path string `json:"path,omitzero"`
+}
 
 type TaskCommand struct {
 	Path string   `json:"path,omitzero"`

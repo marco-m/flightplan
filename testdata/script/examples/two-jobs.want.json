@@ -1,13 +1,3 @@
-#
-# Generate pipeline, default values
-#
-exec examples-two-jobs
-! stdout .
-stderr 'wrote pipeline to /.+/two-jobs.json'
-cmp two-jobs.json two-jobs.want.json
-
-
--- two-jobs.want.json --
 {
   "resources": [
     {
@@ -15,10 +5,7 @@ cmp two-jobs.json two-jobs.want.json
       "type": "git",
       "source": {
         "uri": "https://github.com/marco-m/flightplan.git",
-        "branch": "master",
-        "paths": [
-          "ci/*"
-        ]
+        "branch": "master"
       }
     },
     {
@@ -26,7 +13,12 @@ cmp two-jobs.json two-jobs.want.json
       "type": "s3",
       "source": {
         "bucket": "concourse",
-        "regexp": "builds/simple-s3/gift-(.*)"
+        "regexp": "builds/simple-s3/gift-(.*)",
+        "endpoint": "((s3-endpoint))",
+        "region_name": "((s3-region))",
+        "access_key_id": "((s3-access-key))",
+        "secret_access_key": "((s3-secret-key))",
+        "use_path_style": true
       }
     }
   ],
@@ -45,37 +37,28 @@ cmp two-jobs.json two-jobs.want.json
             "image_resource": {
               "type": "registry-image",
               "source": {
-                "repository": "golang"
+                "repository": "alpine"
               }
             },
+            "outputs": [
+              {
+                "name": "gift"
+              }
+            ],
             "run": {
-              "path": "echo",
+              "path": "sh",
               "args": [
-                "ciccio"
+                "-c",
+                "set -e\nset -x\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
               ]
             }
           }
         },
         {
-          "task": "let-dough-rise",
-          "config": {
-            "platform": "linux",
-            "image_resource": {
-              "type": "registry-image",
-              "source": {
-                "repository": "golang"
-              }
-            },
-            "run": {
-              "path": "echo",
-              "args": [
-                "bello"
-              ]
-            }
+          "put": "artifacts.s3",
+          "params": {
+            "file": "gift/gift-*"
           }
-        },
-        {
-          "put": "artifacts.s3"
         }
       ]
     },
@@ -96,13 +79,13 @@ cmp two-jobs.json two-jobs.want.json
           ]
         },
         {
-          "task": "put-in-hoven",
+          "task": "place-in-hoven",
           "config": {
             "platform": "linux",
             "image_resource": {
               "type": "registry-image",
               "source": {
-                "repository": "golang"
+                "repository": "alpine"
               }
             },
             "run": {

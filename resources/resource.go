@@ -3,6 +3,8 @@
 
 package resources
 
+import "encoding/json"
+
 type Resource struct {
 	// Required
 
@@ -40,25 +42,43 @@ type AnonymousResource struct {
 
 // Source is the "source" object in a Concourse [Resource] or [AnonymousResource].
 type Source interface {
-	// Source confirms that the struct is actually a [Source].
+	// IsSource confirms that the struct is actually a [Source].
 	// Exported to allow custom resources to be defined outside of the flightplan module.
-	Source()
+	IsSource()
 	// Type returns the mandatory resource type, used by [Pipeline.AddResource] to set
 	// field [Resource.Type] of the outer resorce. Setting [Resource.Type] directly will
 	// be considered an error.
 	Type() string
 	// Validate that the fields of the [Source] implementation are correct.
 	Validate() error
+	ValidateGet(GetParams) error
+	ValidatePut(PutParams) error
 }
 
-// Params is the "params" object in a Concourse [Resource] or [AnonymousResource].
+// Params is the "params" object in a Concourse [Resource], [AnonymousResource].
 type Params interface {
 	// Confirm that the struct is actually a [Params].
 	// Exported to allow custom resources to be defined outside of the flightplan module.
-	Params()
+	IsParams()
+	// Validate verifies the fields of this object.
+	Validate() error
+}
+
+type PutParams interface {
+	IsPutParams()
+}
+
+type GetParams interface {
+	IsGetParams()
 }
 
 // A resource name must be unique per pipeline, otherwhise it could not be resolved
 // unambiguously as a get or put step. Thus, we can use its name as handle: returned
 // by [Pipeline.AddResource] and required by [Pipeline.AddJob].
-type Handle string
+type Handle struct {
+	Resource
+}
+
+func (handle *Handle) MarshalJSON() ([]byte, error) {
+	return json.Marshal(handle.Name)
+}
