@@ -1,24 +1,10 @@
-#
-# Generate pipeline, default values
-#
-exec examples-two-jobs
-! stdout .
-stderr 'wrote pipeline to /.+/two-jobs.json'
-cmp two-jobs.json two-jobs.want.json
-
-
--- two-jobs.want.json --
 {
   "resources": [
     {
       "name": "flightplan.git",
       "type": "git",
       "source": {
-        "uri": "https://github.com/marco-m/flightplan.git",
-        "branch": "master",
-        "paths": [
-          "ci/*"
-        ]
+        "uri": "https://github.com/marco-m/flightplan.git"
       }
     },
     {
@@ -45,32 +31,11 @@ cmp two-jobs.json two-jobs.want.json
             "image_resource": {
               "type": "registry-image",
               "source": {
-                "repository": "golang"
+                "repository": "alpine"
               }
             },
             "run": {
-              "path": "echo",
-              "args": [
-                "ciccio"
-              ]
-            }
-          }
-        },
-        {
-          "task": "let-dough-rise",
-          "config": {
-            "platform": "linux",
-            "image_resource": {
-              "type": "registry-image",
-              "source": {
-                "repository": "golang"
-              }
-            },
-            "run": {
-              "path": "echo",
-              "args": [
-                "bello"
-              ]
+              "path": "env"
             }
           }
         },
@@ -102,16 +67,11 @@ cmp two-jobs.json two-jobs.want.json
             "image_resource": {
               "type": "registry-image",
               "source": {
-                "repository": "golang"
+                "repository": "alpine"
               }
             },
             "run": {
-              "path": "echo",
-              "args": [
-                "hot",
-                "hot",
-                "hot"
-              ]
+              "path": "env"
             }
           }
         }

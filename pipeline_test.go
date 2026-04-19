@@ -94,6 +94,94 @@ func TestPipelineWithOneJobIsValid(t *testing.T) {
 	assertRenderedEqualsGolden(t, pipeline.Path(), "testdata/one-job.json", *update)
 }
 
+func TestPipelineJobGetAndPutResource(t *testing.T) {
+	dir := t.TempDir()
+	pipeline := plan.NewPipeline("get-and-put", []string{"--directory", dir})
+	repo := pipeline.AddResource(resources.Resource{
+		Name:   "flightplan.git",
+		Source: resources.Git{Uri: "https://github.com/marco-m/flightplan.git"},
+	})
+	s3 := pipeline.AddResource(resources.Resource{
+		Name: "artifacts.s3",
+		Source: resources.S3{
+			Bucket: "concourse",
+			Regexp: "builds/simple-s3/gift-(.*)",
+		},
+	})
+	alpineImage := resources.AnonymousResource{
+		Source: resources.RegistryImage{Repository: "alpine"},
+	}
+	kneadPizza := pipeline.AddJob(plan.Job{
+		Name: "knead-pizza",
+		Plan: []plan.Step{
+			plan.Get{Get: repo, Trigger: true},
+			plan.Task{
+				Task: "prepare-dough",
+				Config: &plan.TaskConfig{
+					Platform:      "linux",
+					ImageResource: &alpineImage,
+					Run:           plan.TaskCommand{Path: "env"},
+				},
+			},
+			plan.Put{Put: s3},
+		},
+	})
+	pipeline.AddJob(plan.Job{
+		Name: "bake-pizza",
+		Plan: []plan.Step{
+			plan.Get{Get: repo, Passed: []plan.JobHandle{kneadPizza}, Trigger: true},
+			plan.Get{Get: s3, Passed: []plan.JobHandle{kneadPizza}},
+			plan.Task{
+				Task: "put-in-hoven",
+				Config: &plan.TaskConfig{
+					Platform:      "linux",
+					ImageResource: &alpineImage,
+					Run:           plan.TaskCommand{Path: "env"},
+				},
+			},
+		},
+	})
+
+	err := pipeline.Render()
+
+	assert.NoError(t, err, "Render")
+	assertRenderedEqualsGolden(t, pipeline.Path(), "testdata/get-and-put.json", *update)
+}
+
+func TestPipelineGetStepValidateFailure(t *testing.T) {
+	test := func(resHandle resources.ResourceHandle) {
+		dir := t.TempDir()
+		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
+		pipeline.AddJob(plan.Job{
+			Name: "knead-pizza",
+			Plan: []plan.Step{plan.Get{Get: resHandle}},
+		})
+		err := pipeline.Render()
+
+		assert.ErrorIs(t, err, plan.ErrGetValidation, "Render")
+	}
+
+	test("")
+	test("non-existing")
+}
+
+func TestPipelinePutStepValidateFailure(t *testing.T) {
+	test := func(resHandle resources.ResourceHandle) {
+		dir := t.TempDir()
+		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
+		pipeline.AddJob(plan.Job{
+			Name: "knead-pizza",
+			Plan: []plan.Step{plan.Put{Put: resHandle}},
+		})
+		err := pipeline.Render()
+
+		assert.ErrorIs(t, err, plan.ErrPutValidation, "Render")
+	}
+
+	test("")
+	test("non-existing")
+}
+
 //
 // Helpers.
 //

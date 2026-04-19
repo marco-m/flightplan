@@ -4,6 +4,8 @@
 package flightplan
 
 import (
+	"fmt"
+
 	"github.com/marco-m/flightplan/resources"
 )
 
@@ -12,14 +14,15 @@ import (
 type Step interface {
 	// Confirm that the struct is actually a [Step] (sealed interface).
 	step()
+	Validate(pl *Pipeline) error
 }
 
+// Get implements [Step].
 // Fetches a version of a resource.
 // See https://concourse-ci.org/docs/steps/get/
 type Get struct {
-	// Required
-
-	Get resources.ResourceHandle `json:"get,omitzero"`
+	// Required. Get is the resource to get from.
+	Get resources.ResourceHandle `json:"get"`
 
 	// Optional
 
@@ -32,11 +35,39 @@ type Get struct {
 
 func (Get) step() {}
 
+func (get Get) Validate(pl *Pipeline) error {
+	if get.Get == "" {
+		return fmt.Errorf("%w: field Get cannot be empty", ErrGetValidation)
+	}
+	for _, res := range pl.po.Resources {
+		if res.Name == string(get.Get) {
+			return nil
+		}
+	}
+	return fmt.Errorf("%w: field Get: unknown resource %q", ErrGetValidation, get.Get)
+}
+
+// Put implements [Step].
+// Pushes to the given resource.
+// See https://concourse-ci.org/docs/steps/put/
 type Put struct {
-	Resource resources.ResourceHandle
+	// Required. Put is the resource to put to.
+	Put resources.ResourceHandle `json:"put"`
 }
 
 func (Put) step() {}
+
+func (put Put) Validate(pl *Pipeline) error {
+	if put.Put == "" {
+		return fmt.Errorf("%w: field Put cannot be empty", ErrPutValidation)
+	}
+	for _, res := range pl.po.Resources {
+		if res.Name == string(put.Put) {
+			return nil
+		}
+	}
+	return fmt.Errorf("%w: field Put: unknown resource %q", ErrPutValidation, put.Put)
+}
 
 // Task implements [Step].
 // See https://concourse-ci.org/docs/steps/task/
@@ -54,6 +85,34 @@ type Task struct {
 }
 
 func (Task) step() {}
+
+func (task Task) Validate(pl *Pipeline) error {
+	if task.Task == "" {
+		return ErrTaskNoName
+	}
+	if (task.Config != nil) && task.File != "" {
+		return ErrTaskBothConfigAndFile
+	}
+	if task.Config != nil {
+		if task.Config.ImageResource == nil {
+			return ErrImageResource
+		}
+		imgRes := task.Config.ImageResource
+		if imgRes.Type != "" {
+			return fmt.Errorf("%w: %s", ErrSetImageResourceType, imgRes.Type)
+		}
+		if task.Config.ImageResource.Source == nil {
+			return ErrImageResourceSource
+		}
+		task.Config.ImageResource.Type = task.Config.ImageResource.Source.Type()
+		return nil
+	}
+	if task.File != "" {
+		// TODO
+		return nil
+	}
+	return ErrTaskNoConfigNoFile
+}
 
 type TaskConfig struct {
 	// Required

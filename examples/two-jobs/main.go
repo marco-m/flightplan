@@ -71,7 +71,7 @@ func buildPipeline() error {
 					},
 				},
 			},
-			plan.Put{Resource: s3},
+			plan.Put{Put: s3},
 		},
 	})
 
