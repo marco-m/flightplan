@@ -3,6 +3,7 @@
 cover_dir := source_directory() + "/.scratch/cover"
 export COVER_MERGE := cover_dir + "/merge"
 export COVER_UNIT := cover_dir + "/unit"
+# Used in script_test.go
 export COVER_INTEGRATION := cover_dir + "/integration"
 
 # NOTE code test coverage:
@@ -13,12 +14,20 @@ export COVER_INTEGRATION := cover_dir + "/integration"
 #    go test -coverprofile=.cover/profile ./...
 #    go tool cover -html=.cover/profile
 
+# Coverage (1) inter-packages and (2) considering integration testing.
 test: clean-coverage
-    @ # careful: arguments after -args are silently ignored.
+    @ # Careful: arguments after -args are silently ignored.
     go test -count=1 -cover -coverpkg=./...  ./... -args -test.gocoverdir=${COVER_UNIT}
     @ # Show per package coverage data considering unit and integration:
     go tool covdata percent -i=${COVER_UNIT},${COVER_INTEGRATION}
     @ # Merge binary format and then convert to text format (will be used by coverage-browser):
+    go tool covdata textfmt -i=${COVER_UNIT},${COVER_INTEGRATION} -o=${COVER_MERGE}/profile
+
+# Coverage (1) of individual packages and (2) NOT considering integration testing.
+test-individual-coverage: clean-coverage
+    @ # Careful: arguments after -args are silently ignored.
+    go test -count=1 -cover ./... -args -test.gocoverdir=${COVER_UNIT}
+    @ # Convert coverage to text format (will be used by coverage-browser):
     go tool covdata textfmt -i=${COVER_UNIT},${COVER_INTEGRATION} -o=${COVER_MERGE}/profile
 
 coverage-browser:

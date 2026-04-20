@@ -50,7 +50,9 @@ func runScriptTests(t *testing.T, pattern string) {
 		Quiet: !testing.Verbose(),
 	}
 
-	// How to make executables found in the host PATH available to the test script:
+	// Make an executable found in the host PATH available to the test script for
+	// direct invocation (will also show in the help output). Contrast above with
+	// putting a custom-built executable with goBuild into env["PATH"].
 	engine.Cmds["ls"] = script.Program("ls", nil, 100*time.Millisecond)
 
 	ctx := context.Background()
