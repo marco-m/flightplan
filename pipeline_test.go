@@ -149,7 +149,7 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 }
 
 func TestPipelineGetStepValidateFailure(t *testing.T) {
-	test := func(resHandle resources.ResourceHandle) {
+	test := func(resHandle resources.Handle) {
 		dir := t.TempDir()
 		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
 		pipeline.AddJob(plan.Job{
@@ -166,7 +166,7 @@ func TestPipelineGetStepValidateFailure(t *testing.T) {
 }
 
 func TestPipelinePutStepValidateFailure(t *testing.T) {
-	test := func(resHandle resources.ResourceHandle) {
+	test := func(resHandle resources.Handle) {
 		dir := t.TempDir()
 		pipeline := plan.NewPipeline("get-failure", []string{"--directory", dir})
 		pipeline.AddJob(plan.Job{

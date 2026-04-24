@@ -22,7 +22,7 @@ type Step interface {
 // See https://concourse-ci.org/docs/steps/get/
 type Get struct {
 	// Required. Get is the resource to get from.
-	Get resources.ResourceHandle `json:"get"`
+	Get resources.Handle `json:"get"`
 
 	// Optional
 
@@ -52,7 +52,7 @@ func (get Get) Validate(pl *Pipeline) error {
 // See https://concourse-ci.org/docs/steps/put/
 type Put struct {
 	// Required. Put is the resource to put to.
-	Put resources.ResourceHandle `json:"put"`
+	Put resources.Handle `json:"put"`
 }
 
 func (Put) step() {}

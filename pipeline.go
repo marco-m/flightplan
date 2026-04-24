@@ -128,7 +128,7 @@ func (pl *Pipeline) Job(handle JobHandle) (res Job, found bool) {
 
 // AddResource adds resource 'res' to the pipeline. Any error will be returned by
 // [Pipeline.Render].
-func (pl *Pipeline) AddResource(res resources.Resource) resources.ResourceHandle {
+func (pl *Pipeline) AddResource(res resources.Resource) resources.Handle {
 	if res.Name == "" {
 		pl.errs = append(pl.errs,
 			goof.Wrap("AddResource: %w", ErrEmptyResourceName))
@@ -158,14 +158,14 @@ func (pl *Pipeline) AddResource(res resources.Resource) resources.ResourceHandle
 		}
 	}
 	pl.po.Resources = append(pl.po.Resources, res)
-	return resources.ResourceHandle(res.Name)
+	return resources.Handle(res.Name)
 }
 
 // Resource returns a copy of the [Resource] associated with 'handle'.
 // Client code doesn't need to call this function.
-func (pl *Pipeline) Resource(handle resources.ResourceHandle) (res resources.Resource, found bool) {
+func (pl *Pipeline) Resource(handle resources.Handle) (res resources.Resource, found bool) {
 	for _, r := range pl.po.Resources {
-		if resources.ResourceHandle(r.Name) == handle {
+		if resources.Handle(r.Name) == handle {
 			return r, true
 		}
 	}

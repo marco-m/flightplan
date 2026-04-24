@@ -17,7 +17,7 @@ func TestLookupUnknownResource(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 	assert.NoError(t, pipeline.Errors(), "Errors")
 
-	_, found := pipeline.Resource(resources.ResourceHandle("foo"))
+	_, found := pipeline.Resource(resources.Handle("foo"))
 	assert.False(t, found, "resource found")
 }
 

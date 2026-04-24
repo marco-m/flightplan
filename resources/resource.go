@@ -61,4 +61,4 @@ type Params interface {
 // A resource name must be unique per pipeline, otherwhise it could not be resolved
 // unambiguously as a get or put step. Thus, we can use its name as handle: returned
 // by [Pipeline.AddResource] and required by [Pipeline.AddJob].
-type ResourceHandle string
+type Handle string
