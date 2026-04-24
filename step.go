@@ -108,9 +108,14 @@ type Task struct {
 	// A [Task] step must contain a [Task.Config] or a [Task.File] but not both.
 	Config *TaskConfig `json:"config,omitzero"`
 	// File is the path to a YAML file containing the [TaskConfig] to execute.
-	// The first segment in the path should refer to another source from the [Job.Plan],
+	// Flightplan extension: if [Task.FileConfig] is not empty, then [Task.File] will be
+	// created by flightplan, containing [Task.FileConfig].
+	// The first segment in the path should refer to a previous get in the [Job.Plan],
 	// A [Task] step must contain a [Task.File] or a [Task.Config] but not both.
 	File string `json:"file,omitzero"`
+	// Flightplan extension. Equivalent of [Task.Config], will be rendered into
+	// [Task.File].
+	FileConfig *TaskConfig `json:"-"`
 	// Image specifies an artifact source containing an image to use for the task.
 	// This overrides any [TaskConfig.ImageResource] present in the task configuration.
 	Image resources.Handle `json:"image,omitzero"`
@@ -171,6 +176,26 @@ func (task Task) Validate(pl *Pipeline) error {
 		return nil
 	}
 	return ErrTaskNoConfigNoFile
+}
+
+type externalTask struct {
+	File       string
+	FileConfig *TaskConfig
+}
+
+func (task Task) Process(extTasks []*externalTask) (*externalTask, error) {
+	if task.FileConfig == nil {
+		return nil, nil
+	}
+	for _, et := range extTasks {
+		if et.File == task.File {
+			return nil, fmt.Errorf("%w: %q", ErrDuplicateExtTaskFile, task.File)
+		}
+	}
+	return &externalTask{
+		File:       task.File,
+		FileConfig: task.FileConfig,
+	}, nil
 }
 
 // A TaskConfig represents a Concourse task, the smallest configurable unit in a pipeline.

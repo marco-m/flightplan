@@ -1,0 +1,26 @@
+{
+  "resources": [
+    {
+      "name": "banana.git",
+      "type": "git",
+      "source": {
+        "uri": "https://example.org/flightplan.git"
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "job-1",
+      "plan": [
+        {
+          "get": "banana.git",
+          "trigger": true
+        },
+        {
+          "task": "task-1",
+          "file": "banana.git/tasks/task-1.json"
+        }
+      ]
+    }
+  ]
+}

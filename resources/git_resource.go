@@ -83,6 +83,10 @@ func (git Git) ValidatePut(params PutParams) error {
 		ErrGitParamsWrongType, params, GitPutParams{})
 }
 
+func (git Git) SentinelDir() string {
+	return ".git"
+}
+
 type GitGetParams struct {
 	// Optional. If a positive integer is given, shallow clone the repository using the
 	// --depth option.

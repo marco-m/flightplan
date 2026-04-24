@@ -5,15 +5,16 @@ package flightplan_test
 
 import (
 	"flag"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
+	"github.com/marco-m/flightplan/internal/testhelpers"
 	"github.com/marco-m/flightplan/resources"
 
 	"github.com/marco-m/rosina/assert"
-	"github.com/marco-m/rosina/golden"
 )
 
 var update = flag.Bool("golden.update", false,
@@ -37,11 +38,33 @@ func makeTestJobInlineTask() plan.Job {
 	}
 }
 
+func makeTestJobExternalTask(pl *plan.Pipeline, repo *resources.Handle, jobName, taskName, taskDir string) plan.Job {
+	taskPath := path.Join(pl.RelDir(repo), taskDir, taskName+".json")
+	return plan.Job{
+		Name: jobName,
+		Plan: []plan.Step{
+			plan.Get{Get: repo, Trigger: true},
+			plan.Task{
+				Task: taskName,
+				File: taskPath,
+				FileConfig: &plan.TaskConfig{
+					Platform: "linux",
+					ImageResource: &resources.AnonymousResource{
+						Source: resources.RegistryImage{Repository: "alpine"},
+					},
+					Run: plan.TaskCommand{Path: "echo", Args: []string{taskName}},
+				},
+			},
+		},
+	}
+}
+
 func TestPipelinePath(t *testing.T) {
 	test := func(desc, name string, args []string, wantSuffix string) {
 		t.Helper()
 		pipeline := plan.NewPipeline(name, args)
-		assert.True(t, strings.HasSuffix(filepath.ToSlash(pipeline.Path()), wantSuffix), "Path "+desc)
+		assert.True(t, strings.HasSuffix(filepath.ToSlash(pipeline.Path()), wantSuffix),
+			"Path "+desc)
 		assert.True(t, filepath.IsAbs(pipeline.Path()), "Path is absolute")
 	}
 
@@ -80,7 +103,7 @@ func TestPipelineWithOneJobIsValid(t *testing.T) {
 	err := pipeline.Render()
 
 	assert.NoError(t, err, "Render")
-	assertRenderedEqualsGolden(t, pipeline.Path(), "testdata/one-job.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, pipeline.Path(), "testdata/one-job.json", *update)
 }
 
 func TestPipelineJobGetAndPutResource(t *testing.T) {
@@ -151,7 +174,94 @@ echo "hello" > $GIFT
 	err := pipeline.Render()
 
 	assert.NoError(t, err, "Render")
-	assertRenderedEqualsGolden(t, pipeline.Path(), "testdata/get-and-put.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, pipeline.Path(), "testdata/get-and-put.json", *update)
+}
+
+func TestPipelineExternalTaskfileFailure(t *testing.T) {
+	dir := t.TempDir()
+	pl := plan.NewPipeline("pl-external-taskfile", []string{"--directory", dir})
+	repo := pl.AddResource(resources.Resource{
+		Name:   "banana.git",
+		Source: resources.Git{Uri: "https://example.org/flightplan.git"},
+	})
+	pl.AddJob(makeTestJobExternalTask(pl, repo, "job1", "mango", "tasks"))
+	pl.AddJob(makeTestJobExternalTask(pl, repo, "job2", "mango", "tasks"))
+	err := pl.Errors()
+
+	assert.ErrorIs(t, err, plan.ErrDuplicateExtTaskFile, "Errors")
+}
+
+func TestPipelineCreateOneExternalTaskfileSuccess(t *testing.T) {
+	dir := t.TempDir()
+	testhelpers.MakeFakeGitRepo(t, dir)
+	name := "pl-with-taskfile"
+	pl := plan.NewPipeline(name, []string{"--directory", dir})
+	repo := pl.AddResource(resources.Resource{
+		Name:   "banana.git",
+		Source: resources.Git{Uri: "https://example.org/flightplan.git"},
+	})
+
+	pl.AddJob(makeTestJobExternalTask(pl, repo, "job-1", "task-1", "tasks"))
+	err := pl.Render()
+	assert.NoError(t, err, "Render")
+
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-with-taskfile.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
+		"testdata/task-1.json", *update)
+}
+
+func TestPipelineCreateTwoExternalTaskfileSuccess(t *testing.T) {
+	dir := t.TempDir()
+	testhelpers.MakeFakeGitRepo(t, dir)
+	name := "pl-with-two-taskfiles"
+	pl := plan.NewPipeline(name, []string{"--directory", dir})
+	repo := pl.AddResource(resources.Resource{
+		Name:   "banana.git",
+		Source: resources.Git{Uri: "https://example.org/flightplan.git"},
+	})
+
+	pl.AddJob(makeTestJobExternalTask(pl, repo, "job-1", "task-1", "tasks"))
+	pl.AddJob(makeTestJobExternalTask(pl, repo, "job-2", "task-2", "tasks"))
+	err := pl.Render()
+	assert.NoError(t, err, "Render")
+
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-with-two-taskfiles.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
+		"testdata/task-1.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-2.json"),
+		"testdata/task-2.json", *update)
+}
+
+func TestPipelineReuseExternalTaskfileSuccess(t *testing.T) {
+	dir := t.TempDir()
+	testhelpers.MakeFakeGitRepo(t, dir)
+	name := "pl-with-two-taskfiles"
+	pl := plan.NewPipeline(name, []string{"--directory", dir})
+	repo := pl.AddResource(resources.Resource{
+		Name:   "banana.git",
+		Source: resources.Git{Uri: "https://example.org/flightplan.git"},
+	})
+
+	// External task file, with FileConfig.
+	job1 := makeTestJobExternalTask(pl, repo, "job-1", "task-1", "tasks")
+	taskFile1 := job1.Plan[1].(plan.Task).File
+	pl.AddJob(job1)
+
+	// External task file, nil FileConfig, same File path than job1: that is, it reuses
+	// the task file of job 1.
+	job2 := plan.Job{
+		Name: "job-2",
+		Plan: []plan.Step{plan.Task{Task: "task-2", File: taskFile1}},
+	}
+	pl.AddJob(job2)
+
+	err := pl.Render()
+	assert.NoError(t, err, "Render")
+
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-reuse-taskfiles.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
+		"testdata/task-1.json", *update)
+	// There is no "tasks/task-2.json" !
 }
 
 func TestPipelineGetStepValidateFailure(t *testing.T) {
@@ -188,22 +298,4 @@ func TestPipelinePutStepValidateFailure(t *testing.T) {
 	test("nil handle", nil)
 	test("missing name", &resources.Handle{})
 	test("non-existing name", &resources.Handle{Resource: resources.Resource{Name: "banana"}})
-}
-
-//
-// Helpers.
-//
-
-func assertRenderedEqualsGolden(t *testing.T, havePath, goldenPath string, update bool) {
-	t.Helper()
-	if diff := golden.DiffFiles(t, havePath, goldenPath, update); diff != "" {
-		t.Errorf("Render: mismatch:\n%s", diff)
-		// hack, make it possible to detect whitespace changes
-		// haveBytes, err := os.ReadFile(havePath)
-		// assert.NoError(t, err, "reading havePath")
-		// goldenBytes, err := os.ReadFile(goldenPath)
-		// assert.NoError(t, err, "reading goldenPath")
-		// t.Errorf("have\n%s", hex.Dump(haveBytes))
-		// t.Errorf("golden\n%s", hex.Dump(goldenBytes))
-	}
 }

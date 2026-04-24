@@ -82,3 +82,11 @@ type Handle struct {
 func (handle *Handle) MarshalJSON() ([]byte, error) {
 	return json.Marshal(handle.Name)
 }
+
+// Interface SentinelDir must be implemented by any SCM repository resource, such as [Git]
+// and Mercurial. It returns the name of a sentinel directory, used to construct a
+// relative path from the root of the SCM repository. Used by [Pipeline.RelDir]. Client
+// code doesn't need to interact with it.
+type SentinelDir interface {
+	SentinelDir() string
+}

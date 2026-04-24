@@ -3,7 +3,7 @@
 #
 ! exec examples-simple -directory /mango
 ! stdout .
-stderr 'error: mkdir /mango:'
+stderr 'error: .* NewPipeline: cannot create pipeline directory: mkdir /mango:'
 
 #
 # Report error if cannot create file
