@@ -16,6 +16,6 @@ fly -t dev set-pipeline --non-interactive -p get-and-put -c $TESTDATA/get-and-pu
 fly -t dev unpause-pipeline -p get-and-put
 
 # trigger-job, will take ages
-sleep 100ms
+sleep 10ms
 fly -t dev trigger-job -j get-and-put/knead-pizza --watch
 stdout 'succeeded'

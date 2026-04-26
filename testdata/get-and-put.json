@@ -75,7 +75,8 @@
           "get": "artifacts.s3",
           "passed": [
             "knead-pizza"
-          ]
+          ],
+          "trigger": true
         },
         {
           "task": "insert-in-hoven",

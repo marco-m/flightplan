@@ -71,6 +71,7 @@ func buildAll(dstDir string) error {
 	srcDirs := []string{
 		"examples/empty",
 		"examples/simple-anon-image",
+		"examples/simple-named-image",
 		"examples/two-jobs",
 		"examples/with-taskfile",
 	}

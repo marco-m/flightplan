@@ -16,6 +16,6 @@ fly -t dev set-pipeline --non-interactive -p two-jobs -c $TESTDATA/script/two-jo
 fly -t dev unpause-pipeline -p two-jobs
 
 # trigger-job, will take ages
-sleep 100ms
+sleep 10ms
 fly -t dev trigger-job -j two-jobs/knead-pizza --watch
 stdout 'succeeded'

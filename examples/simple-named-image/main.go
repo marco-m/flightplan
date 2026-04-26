@@ -2,10 +2,10 @@
 // Use of this source code is governed by the MIT license; see the LICENSE file.
 
 // There are two ways to pass an OCI image to a Concourse task:
-// 1. With an anonymous resource passed directly Task.Config.ImageResource
+// 1. With an anonymous resource passed to Task.Config.ImageResource
 // 2. With a named resource passed to Task.Image
 //
-// This file shows option 1.
+// This file shows option 2.
 package main
 
 import (
@@ -24,7 +24,7 @@ func main() {
 }
 
 func buildPipeline() error {
-	pipeline := plan.NewPipeline("simple-anon-image", os.Args[1:])
+	pipeline := plan.NewPipeline("simple-named-image", os.Args[1:])
 
 	repo := pipeline.AddResource(resources.Resource{
 		Name: "flightplan.git",
@@ -34,20 +34,21 @@ func buildPipeline() error {
 			Branch: "master",
 		},
 	})
-
-	alpineImage := resources.AnonymousResource{
+	alpineImage := pipeline.AddResource(resources.Resource{
+		Name:   "alpine.image",
 		Source: resources.RegistryImage{Repository: "alpine"},
-	}
+	})
 
 	pipeline.AddJob(plan.Job{
 		Name: "knead-pizza",
 		Plan: []plan.Step{
 			plan.Get{Get: repo, Trigger: true},
+			plan.Get{Get: alpineImage},
 			plan.Task{
-				Task: "prepare-dough",
+				Task:  "prepare-dough",
+				Image: alpineImage,
 				Config: &plan.TaskConfig{
-					Platform:      "linux",
-					ImageResource: &alpineImage,
+					Platform: "linux",
 					Run: plan.TaskCommand{
 						Path: "echo",
 						Args: []string{"ciccio"},
@@ -55,10 +56,10 @@ func buildPipeline() error {
 				},
 			},
 			plan.Task{
-				Task: "let-dough-rise",
+				Task:  "let-dough-rise",
+				Image: alpineImage,
 				Config: &plan.TaskConfig{
-					Platform:      "linux",
-					ImageResource: &alpineImage,
+					Platform: "linux",
 					Run: plan.TaskCommand{
 						Path: "echo",
 						Args: []string{"bello"},

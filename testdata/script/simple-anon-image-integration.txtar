@@ -16,6 +16,6 @@ fly -t dev set-pipeline --non-interactive -p simple-anon-image -c $TESTDATA/scri
 fly -t dev unpause-pipeline -p simple-anon-image
 
 # trigger-job, will take ages
-sleep 100ms
+sleep 10ms
 fly -t dev trigger-job -j simple-anon-image/knead-pizza --watch
 stdout 'succeeded'

@@ -118,7 +118,11 @@ type Task struct {
 	FileConfig *TaskConfig `json:"-"`
 	// Image specifies an artifact source containing an image to use for the task.
 	// This overrides any [TaskConfig.ImageResource] present in the task configuration.
-	Image resources.Handle `json:"image,omitzero"`
+	// This is very useful when part of your pipeline involves building an image,
+	// possibly with dependencies pre-baked. You can then propagate that image through
+	// the rest of your pipeline, guaranteeing that the correct version (and thus a
+	// consistent set of dependencies) is used throughout your pipeline.
+	Image *resources.Handle `json:"image,omitzero"`
 	// Default false. If set to true, the task will run with escalated capabilities
 	// available on the task's platform.
 	// WARNING Setting privileged: true is a gaping security hole; use wisely
@@ -158,17 +162,20 @@ func (task Task) Validate(pl *Pipeline) error {
 		return ErrTaskBothConfigAndFile
 	}
 	if task.Config != nil {
-		if task.Config.ImageResource == nil {
-			return ErrImageResource
+		anonImgRes := task.Config.ImageResource
+		if anonImgRes == nil {
+			if task.Image == nil {
+				return ErrMissingImageResource
+			}
+			return nil
 		}
-		imgRes := task.Config.ImageResource
-		if imgRes.Type != "" {
-			return fmt.Errorf("%w: %s", ErrSetImageResourceType, imgRes.Type)
+		if anonImgRes.Type != "" {
+			return fmt.Errorf("%w: %s", ErrSetImageResourceType, anonImgRes.Type)
 		}
-		if task.Config.ImageResource.Source == nil {
+		if anonImgRes.Source == nil {
 			return ErrImageResourceSource
 		}
-		task.Config.ImageResource.Type = task.Config.ImageResource.Source.Type()
+		anonImgRes.Type = anonImgRes.Source.Type()
 		return nil
 	}
 	if task.File != "" {

@@ -1,0 +1,59 @@
+{
+  "resources": [
+    {
+      "name": "flightplan.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git",
+        "branch": "master"
+      }
+    },
+    {
+      "name": "alpine.image",
+      "type": "registry-image",
+      "source": {
+        "repository": "alpine"
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "knead-pizza",
+      "plan": [
+        {
+          "get": "flightplan.git",
+          "trigger": true
+        },
+        {
+          "get": "alpine.image"
+        },
+        {
+          "task": "prepare-dough",
+          "config": {
+            "platform": "linux",
+            "run": {
+              "path": "echo",
+              "args": [
+                "ciccio"
+              ]
+            }
+          },
+          "image": "alpine.image"
+        },
+        {
+          "task": "let-dough-rise",
+          "config": {
+            "platform": "linux",
+            "run": {
+              "path": "echo",
+              "args": [
+                "bello"
+              ]
+            }
+          },
+          "image": "alpine.image"
+        }
+      ]
+    }
+  ]
+}

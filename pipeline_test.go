@@ -106,6 +106,45 @@ func TestPipelineWithOneJobIsValid(t *testing.T) {
 	testhelpers.AssertRenderedEqualsGolden(t, pipeline.Path(), "testdata/one-job.json", *update)
 }
 
+func TestPipelineNamedImageResource(t *testing.T) {
+	dir := t.TempDir()
+	pl := plan.NewPipeline("named-image-resource", []string{"--directory", dir})
+	repo := pl.AddResource(resources.Resource{
+		Name:   "flightplan.git",
+		Source: resources.Git{Uri: "https://github.com/marco-m/flightplan.git"},
+	})
+	alpineImage := pl.AddResource(resources.Resource{
+		Name:   "alpine.image",
+		Source: resources.RegistryImage{Repository: "alpine"},
+	})
+
+	pl.AddJob(plan.Job{
+		Name: "the-job",
+		Plan: []plan.Step{
+			plan.Get{Get: repo, Trigger: true},
+			plan.Get{Get: alpineImage},
+			plan.Task{
+				Task:  "the-task",
+				Image: alpineImage,
+				Config: &plan.TaskConfig{
+					Platform: "linux",
+					Run: plan.TaskCommand{
+						Path: "sh", Args: []string{"-c", `echo "hello"`},
+					},
+				},
+			},
+		},
+	})
+	err := pl.Render()
+
+	// FIXME expect error missing name for image resource!!!
+	// FIXME expect error if no ImageResource and no Image
+	// FIXME named image BUT missing GET of said image!
+	// FXIME both named and anon image: anon image is still written to task (as Concourse does)
+	assert.NoError(t, err, "Render")
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/named-image-resource.json", *update)
+}
+
 func TestPipelineJobGetAndPutResource(t *testing.T) {
 	dir := t.TempDir()
 	pipeline := plan.NewPipeline("get-and-put", []string{"--directory", dir})
@@ -159,7 +198,7 @@ echo "hello" > $GIFT
 		Name: "bake-pizza",
 		Plan: []plan.Step{
 			plan.Get{Get: repo, Passed: []plan.JobHandle{kneadPizza}, Trigger: true},
-			plan.Get{Get: artifacts, Passed: []plan.JobHandle{kneadPizza}},
+			plan.Get{Get: artifacts, Passed: []plan.JobHandle{kneadPizza}, Trigger: true},
 			plan.Task{
 				Task: "insert-in-hoven",
 				Config: &plan.TaskConfig{

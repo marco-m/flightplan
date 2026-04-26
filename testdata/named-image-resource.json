@@ -1,0 +1,46 @@
+{
+  "resources": [
+    {
+      "name": "flightplan.git",
+      "type": "git",
+      "source": {
+        "uri": "https://github.com/marco-m/flightplan.git"
+      }
+    },
+    {
+      "name": "alpine.image",
+      "type": "registry-image",
+      "source": {
+        "repository": "alpine"
+      }
+    }
+  ],
+  "jobs": [
+    {
+      "name": "the-job",
+      "plan": [
+        {
+          "get": "flightplan.git",
+          "trigger": true
+        },
+        {
+          "get": "alpine.image"
+        },
+        {
+          "task": "the-task",
+          "config": {
+            "platform": "linux",
+            "run": {
+              "path": "sh",
+              "args": [
+                "-c",
+                "echo \"hello\""
+              ]
+            }
+          },
+          "image": "alpine.image"
+        }
+      ]
+    }
+  ]
+}

@@ -91,7 +91,7 @@ func TestAddJobTaskConfigMustHaveImageResource(t *testing.T) {
 
 	pipeline.AddJob(job)
 
-	assert.ErrorIs(t, pipeline.Errors(), plan.ErrImageResource, "Errors")
+	assert.ErrorIs(t, pipeline.Errors(), plan.ErrMissingImageResource, "Errors")
 }
 
 func TestAddJobTaskConfigMustHaveImageResourceSource(t *testing.T) {

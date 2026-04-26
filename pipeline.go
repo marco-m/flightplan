@@ -19,6 +19,7 @@ import (
 	"github.com/mitchellh/copystructure"
 )
 
+//lint:file-ignore ST1005 Capitalized error strings are OK in this case.
 var (
 	ErrMissingNewPipeline    = errors.New("must use NewPipeline to create a pipeline")
 	ErrCreatePipelineDir     = errors.New("cannot create pipeline directory")
@@ -30,7 +31,7 @@ var (
 	ErrTaskBothConfigAndFile = errors.New("task cannot have both Config and File")
 	ErrTaskNoConfigNoFile    = errors.New("task must have Config or File")
 	ErrTaskNoName            = errors.New("task field 'Task' cannot be empty")
-	ErrImageResource         = errors.New("Config.ImageResource cannot be empty")
+	ErrMissingImageResource  = errors.New("At least one of Image or Config.ImageResource must be set")
 	ErrSetImageResourceType  = errors.New("Config.ImageResource.Type cannot be set (will be set by Source.Type)")
 	ErrImageResourceSource   = errors.New("Config.ImageResource.Source cannot be empty")
 	ErrEmptyResourceName     = errors.New("Resource Name cannot be empty")
