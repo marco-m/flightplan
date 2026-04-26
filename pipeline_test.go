@@ -6,20 +6,20 @@ package flightplan_test
 import (
 	"flag"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	plan "github.com/marco-m/flightplan"
 	"github.com/marco-m/flightplan/resources"
 
 	"github.com/marco-m/rosina/assert"
-	"github.com/marco-m/rosina/check"
 	"github.com/marco-m/rosina/golden"
 )
 
 var update = flag.Bool("golden.update", false,
 	"update the golden files for this package; use with -run to update a single test")
 
-func makeTestJob() plan.Job {
+func makeTestJobInlineTask() plan.Job {
 	return plan.Job{
 		Name: "bake-pizza",
 		Plan: []plan.Step{
@@ -30,10 +30,7 @@ func makeTestJob() plan.Job {
 					ImageResource: &resources.AnonymousResource{
 						Source: resources.RegistryImage{Repository: "alpine"},
 					},
-					Run: plan.TaskCommand{
-						Path: "echo",
-						Args: []string{"Pizza", "Margherita"},
-					},
+					Run: plan.TaskCommand{Path: "echo", Args: []string{"Pizza"}},
 				},
 			},
 		},
@@ -44,7 +41,7 @@ func TestPipelinePath(t *testing.T) {
 	test := func(desc, name string, args []string, wantSuffix string) {
 		t.Helper()
 		pipeline := plan.NewPipeline(name, args)
-		check.Contains(t, filepath.ToSlash(pipeline.Path()), wantSuffix, "Path "+desc)
+		assert.True(t, strings.HasSuffix(filepath.ToSlash(pipeline.Path()), wantSuffix), "Path "+desc)
 		assert.True(t, filepath.IsAbs(pipeline.Path()), "Path is absolute")
 	}
 
@@ -78,7 +75,7 @@ func TestPipelineWithoutNameIsInvalid(t *testing.T) {
 func TestPipelineWithOneJobIsValid(t *testing.T) {
 	dir := t.TempDir()
 	pipeline := plan.NewPipeline("one-job", []string{"--directory", dir})
-	pipeline.AddJob(makeTestJob())
+	pipeline.AddJob(makeTestJobInlineTask())
 
 	err := pipeline.Render()
 
@@ -93,7 +90,7 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 		Name:   "flightplan.git",
 		Source: resources.Git{Uri: "https://github.com/marco-m/flightplan.git"},
 	})
-	s3 := pipeline.AddResource(resources.Resource{
+	artifacts := pipeline.AddResource(resources.Resource{
 		Name: "artifacts.s3",
 		Source: resources.S3{
 			Bucket:          "concourse",
@@ -108,6 +105,12 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 	alpineImage := resources.AnonymousResource{
 		Source: resources.RegistryImage{Repository: "alpine"},
 	}
+	const makeGift = `
+set -ex
+VERSION=$(date +%Y%m%d%H%M%S)
+GIFT=gift/gift-$VERSION
+echo "hello" > $GIFT
+`
 	kneadPizza := pipeline.AddJob(plan.Job{
 		Name: "knead-pizza",
 		Plan: []plan.Step{
@@ -117,28 +120,15 @@ func TestPipelineJobGetAndPutResource(t *testing.T) {
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
 					ImageResource: &alpineImage,
-					Outputs: []plan.TaskOutput{
-						{Name: "gift"},
-					},
+					Outputs:       []plan.TaskOutput{{Name: "gift"}},
 					Run: plan.TaskCommand{
-						Path: "sh",
-						Args: []string{
-							"-c",
-							`set -e
-set -x
-VERSION=$(date +%Y%m%d%H%M%S)
-GIFT=gift/gift-$VERSION
-echo "hello" > $GIFT
-`,
-						},
+						Path: "sh", Args: []string{"-c", makeGift},
 					},
 				},
 			},
 			plan.Put{
-				Put: s3,
-				Params: resources.S3PutParams{
-					File: "gift/gift-*",
-				},
+				Put:    artifacts,
+				Params: resources.S3PutParams{File: "gift/gift-*"},
 			},
 		},
 	})
@@ -146,7 +136,7 @@ echo "hello" > $GIFT
 		Name: "bake-pizza",
 		Plan: []plan.Step{
 			plan.Get{Get: repo, Passed: []plan.JobHandle{kneadPizza}, Trigger: true},
-			plan.Get{Get: s3, Passed: []plan.JobHandle{kneadPizza}},
+			plan.Get{Get: artifacts, Passed: []plan.JobHandle{kneadPizza}},
 			plan.Task{
 				Task: "insert-in-hoven",
 				Config: &plan.TaskConfig{
@@ -174,7 +164,7 @@ func TestPipelineGetStepValidateFailure(t *testing.T) {
 		})
 		err := pipeline.Render()
 
-		assert.ErrorIs(t, err, plan.ErrGetValidation, "Render")
+		assert.ErrorIs(t, err, plan.ErrGetValidation, desc)
 	}
 
 	test("nil handle", nil)
@@ -192,7 +182,7 @@ func TestPipelinePutStepValidateFailure(t *testing.T) {
 		})
 		err := pipeline.Render()
 
-		assert.ErrorIs(t, err, plan.ErrPutValidation, "Render")
+		assert.ErrorIs(t, err, plan.ErrPutValidation, desc)
 	}
 
 	test("nil handle", nil)

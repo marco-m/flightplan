@@ -13,7 +13,7 @@ import (
 // steps: [Task], [Get], [Put], [SetPipeline], [InParallel], [Do], [Try], [Loadvar].
 type Step interface {
 	// Confirm that the struct is actually a [Step] (sealed interface).
-	step()
+	isStep()
 	// Validate verifies that a step implementation is valid, by being aware of the
 	// step type and of the referenced resources.
 	// For example: a put step to a resource is aware of the resource type (s3, git, ...)
@@ -37,7 +37,7 @@ type Get struct {
 	Version string              `json:"version,omitzero"`
 }
 
-func (Get) step() {}
+func (Get) isStep() {}
 
 func (get Get) Validate(pl *Pipeline) error {
 	if get.Get == nil {
@@ -63,7 +63,7 @@ type Put struct {
 	Params resources.PutParams `json:"params,omitzero"`
 }
 
-func (Put) step() {}
+func (Put) isStep() {}
 
 func (put Put) Validate(pl *Pipeline) error {
 	if put.Put == nil {
@@ -86,22 +86,64 @@ func (put Put) Validate(pl *Pipeline) error {
 	return nil
 }
 
-// Task implements [Step].
+// See https://concourse-ci.org/docs/steps/task/#container_limits-schema
+type ContainerLimits struct {
+	// The maximum amount of CPU available to the task container, measured in shares.
+	// 0 means unlimited.
+	CPU int `json:"cpu"`
+	// The maximum amount of memory available to the task container, measured in bytes.
+	// 0 means unlimited.
+	Memory int `json:"memory"`
+}
+
+// A Task step executes a [TaskConfig].
+// When a task completes, the artifacts specified by [TaskConfig.Outputs] will be
+// registered in the build's artifact namespace. This allows subsequent [Task] steps
+// and [Put] steps to access the result of a task.
 // See https://concourse-ci.org/docs/steps/task/
 type Task struct {
 	// Required. The name of the task. Shown in the UI.
 	Task string `json:"task,omitzero"`
-	// The [TaskConfig] to execute, inline in the pipeline.
-	// A [Task] must contain a [Task.Config] or a [Task.File] but not both.
+	// Config is the [TaskConfig] to execute, inline in the pipeline.
+	// A [Task] step must contain a [Task.Config] or a [Task.File] but not both.
 	Config *TaskConfig `json:"config,omitzero"`
-	// Path to a YAML file containing a [TaskConfig].
+	// File is the path to a YAML file containing the [TaskConfig] to execute.
 	// The first segment in the path should refer to another source from the [Job.Plan],
-	// and the rest of the path is relative to that source.
-	// A [Task] must contain a [Task.File] or a [Task.Config] but not both.
+	// A [Task] step must contain a [Task.File] or a [Task.Config] but not both.
 	File string `json:"file,omitzero"`
+	// Image specifies an artifact source containing an image to use for the task.
+	// This overrides any [TaskConfig.ImageResource] present in the task configuration.
+	Image resources.Handle `json:"image,omitzero"`
+	// Default false. If set to true, the task will run with escalated capabilities
+	// available on the task's platform.
+	// WARNING Setting privileged: true is a gaping security hole; use wisely
+	// and only if necessary.
+	Privileged bool `json:"privileged,omitzero"`
+	// A map of template variables to pass to an external task. Not to be confused with
+	// task step params, which provides environment variables to the task.
+	// This is to be used with external tasks defined in task step file.
+	Vars map[string]any `json:"vars,omitzero"`
+	// A map of task environment variable parameters to set, overriding those configured
+	// in the task's config or file.
+	Params map[string]any `json:"params,omitzero"`
+	// CPU and memory limits to enforce on the task container.
+	// These values will override any limits set for concourse web.
+	// These values will also override any configuration set on a task's config container_limits
+	ContainerLimits ContainerLimits `json:"container_limits,omitzero"`
+	// Default false. If set to true, the task will have no outbound network access.
+	// WARNING: Works only for Linux IF the container runtime of the worker is containerd.
+	// If has no effect for: Linux with a different container runtime, macOS and Windows.
+	Hermetic bool `json:"hermetic,omitzero"`
+	// A map from task input names to concrete names in the build plan.
+	// This allows a task with generic input names to be used multiple times in the same
+	// plan, mapping its inputs to specific resources within the plan.
+	InputMapping map[string]string `json:"input_mapping,omitzero"`
+	// A map from task output names to concrete names to register in the build plan.
+	// This allows a task with generic output names to be used multiple times in the same plan.
+	OutputMapping map[string]string `json:"output_mapping,omitzero"`
 }
 
-func (Task) step() {}
+func (Task) isStep() {}
 
 func (task Task) Validate(pl *Pipeline) error {
 	if task.Task == "" {
@@ -131,11 +173,15 @@ func (task Task) Validate(pl *Pipeline) error {
 	return ErrTaskNoConfigNoFile
 }
 
+// A TaskConfig represents a Concourse task, the smallest configurable unit in a pipeline.
+// A task can be thought of as a function from [TaskConfig.Inputs] to [TaskConfig.Outputs]
+// that can either succeed or fail.
+// See https://concourse-ci.org/docs/tasks/
 type TaskConfig struct {
 	// Required
 	Platform string `json:"platform,omitzero"`
-
-	// Optional. The container image to run with. Prefer instead [Task.Image].
+	// Optional. The container image to run with. Overridden by [Task.Image].
+	// Prefer instead [Task.Image].
 	ImageResource *resources.AnonymousResource `json:"image_resource,omitzero"`
 	// Optional.
 	Inputs []TaskInput `json:"inputs,omitzero,omitempty"`

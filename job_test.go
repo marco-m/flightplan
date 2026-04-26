@@ -51,40 +51,30 @@ func TestPipelineJobWithoutNameIsInvalid(t *testing.T) {
 	assert.ErrorIs(t, pipeline.Errors(), plan.ErrEmptyJobName, "Errors")
 }
 
-func TestAddJobTaskMustHaveConfigOrFile(t *testing.T) {
-	pipeline := plan.NewPipeline("pizza", nil)
+func TestJobTask(t *testing.T) {
+	test := func(desc string, taskStep plan.Task, wantErr error) {
+		t.Helper()
+		pipeline := plan.NewPipeline("pizza", nil)
+		pipeline.AddJob(plan.Job{Name: "banana", Plan: []plan.Step{taskStep}})
+		assert.ErrorIs(t, pipeline.Errors(), wantErr, desc)
+	}
 
-	pipeline.AddJob(plan.Job{
-		Name: "banana",
-		Plan: []plan.Step{
-			plan.Task{Task: "mango"},
+	test("TaskMustHaveConfigOrFile",
+		plan.Task{Task: "mango"},
+		plan.ErrTaskNoConfigNoFile)
+	test("TaskCannotHaveBothConfigAndFile",
+		plan.Task{
+			Task:   "mango",
+			Config: &plan.TaskConfig{},
+			File:   "banana",
 		},
-	})
-
-	assert.ErrorIs(t, pipeline.Errors(), plan.ErrTaskNoConfigNoFile, "Errors")
-}
-
-func TestAddJobTaskCannotHaveBothConfigAndFile(t *testing.T) {
-	pipeline := plan.NewPipeline("pizza", nil)
-
-	pipeline.AddJob(plan.Job{
-		Name: "banana",
-		Plan: []plan.Step{
-			plan.Task{
-				Task:   "mango",
-				Config: &plan.TaskConfig{},
-				File:   "banana",
-			},
-		},
-	})
-
-	assert.ErrorIs(t, pipeline.Errors(), plan.ErrTaskBothConfigAndFile, "Errors")
+		plan.ErrTaskBothConfigAndFile)
 }
 
 func TestAddJobTaskConfigCannotHaveImageType(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 
-	job := makeTestJob()
+	job := makeTestJobInlineTask()
 	job.Plan[0].(plan.Task).Config.ImageResource.Type = "this-will-fail"
 
 	pipeline.AddJob(job)
@@ -96,7 +86,7 @@ func TestAddJobTaskConfigCannotHaveImageType(t *testing.T) {
 func TestAddJobTaskConfigMustHaveImageResource(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 
-	job := makeTestJob()
+	job := makeTestJobInlineTask()
 	job.Plan[0].(plan.Task).Config.ImageResource = nil
 
 	pipeline.AddJob(job)
@@ -107,7 +97,7 @@ func TestAddJobTaskConfigMustHaveImageResource(t *testing.T) {
 func TestAddJobTaskConfigMustHaveImageResourceSource(t *testing.T) {
 	pipeline := plan.NewPipeline("pizza", nil)
 
-	job := makeTestJob()
+	job := makeTestJobInlineTask()
 	job.Plan[0].(plan.Task).Config.ImageResource.Source = nil
 
 	pipeline.AddJob(job)
@@ -129,7 +119,7 @@ func TestAddJobTaskNeedsName(t *testing.T) {
 func TestPipelineCannotAddDuplicateJob(t *testing.T) {
 	pipeline := plan.NewPipeline("duplicate-job", nil)
 
-	job := makeTestJob()
+	job := makeTestJobInlineTask()
 
 	pipeline.AddJob(job)
 	pipeline.AddJob(job)

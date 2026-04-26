@@ -73,7 +73,6 @@ func NewPipeline(name string, args []string) *Pipeline {
 	if err != nil {
 		pl.errs = append(pl.errs, goof.Wrap("NewPipeline: %w", ErrSystem))
 	}
-	pl.cwd = cwd
 	if pl.name == "" {
 		pl.errs = append(pl.errs, goof.Wrap("NewPipeline: %w", ErrEmptyPipelineName))
 	}
@@ -83,6 +82,9 @@ func NewPipeline(name string, args []string) *Pipeline {
 	// no . as last character
 
 	parseCommandLine(pl, args)
+	if !filepath.IsAbs(pl.dir) {
+		pl.dir = filepath.Join(cwd, pl.dir)
+	}
 
 	return pl
 }
@@ -211,15 +213,7 @@ func (pl *Pipeline) Render() error {
 // Path returns the path of the rendered pipeline.
 // Client code doesn't need to call this function.
 func (pl *Pipeline) Path() string {
-	name := pl.name
-	if filepath.Ext(name) == "" {
-		name += ".json"
-	}
-	if filepath.IsAbs(pl.dir) {
-		// Do not consider the current working directory.
-		return filepath.Join(pl.dir, name)
-	}
-	return filepath.Join(pl.cwd, pl.dir, name)
+	return filepath.Join(pl.dir, pl.name) + ".json"
 }
 
 // Errors returns all the errors so far, joined into a single error.

@@ -16,8 +16,7 @@
             "run": {
               "path": "echo",
               "args": [
-                "Pizza",
-                "Margherita"
+                "Pizza"
               ]
             }
           }

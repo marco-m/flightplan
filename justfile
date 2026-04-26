@@ -6,6 +6,9 @@ export COVER_UNIT := cover_dir + "/unit"
 # Used in script_test.go
 export COVER_INTEGRATION := cover_dir + "/integration"
 
+default:
+  just --list
+
 build:
     go build -o out ./examples/empty
     go build -o out ./examples/simple

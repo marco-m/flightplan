@@ -48,7 +48,7 @@
               "path": "sh",
               "args": [
                 "-c",
-                "set -e\nset -x\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
+                "\nset -ex\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
               ]
             }
           }
