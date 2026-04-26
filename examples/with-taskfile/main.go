@@ -21,7 +21,7 @@ func main() {
 }
 
 func buildPipeline() error {
-	pipeline := plan.NewPipeline("pl-with-task-file", os.Args[1:])
+	pipeline := plan.NewPipeline("with-task-file", os.Args[1:])
 
 	repo := pipeline.AddResource(resources.Resource{
 		Name: "flightplan.git",

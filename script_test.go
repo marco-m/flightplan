@@ -70,7 +70,7 @@ func runScriptTests(t *testing.T, pattern string) {
 func buildAll(dstDir string) error {
 	srcDirs := []string{
 		"examples/empty",
-		"examples/pl-with-taskfile",
+		"examples/with-taskfile",
 		"examples/simple",
 		"examples/two-jobs",
 	}
