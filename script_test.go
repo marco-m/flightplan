@@ -70,9 +70,9 @@ func runScriptTests(t *testing.T, pattern string) {
 func buildAll(dstDir string) error {
 	srcDirs := []string{
 		"examples/empty",
-		"examples/with-taskfile",
-		"examples/simple",
+		"examples/simple-anon-image",
 		"examples/two-jobs",
+		"examples/with-taskfile",
 	}
 	group := new(errgroup.Group)
 	for _, srcDir := range srcDirs {

@@ -10,12 +10,12 @@ stdout 'logging in to team'
 stdout 'target saved'
 
 # set-pipeline
-fly -t dev set-pipeline --non-interactive -p simple -c $TESTDATA/script/simple.want.json
+fly -t dev set-pipeline --non-interactive -p simple-anon-image -c $TESTDATA/script/simple-anon-image.want.json
 
 # unpause-pipeline
-fly -t dev unpause-pipeline -p simple
+fly -t dev unpause-pipeline -p simple-anon-image
 
 # trigger-job, will take ages
 sleep 100ms
-fly -t dev trigger-job -j simple/knead-pizza --watch
+fly -t dev trigger-job -j simple-anon-image/knead-pizza --watch
 stdout 'succeeded'

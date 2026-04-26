@@ -20,7 +20,7 @@ func main() {
 }
 
 func buildPipeline() error {
-	pipeline := plan.NewPipeline("simple", os.Args[1:])
+	pipeline := plan.NewPipeline("simple-anon-image", os.Args[1:])
 
 	repo := pipeline.AddResource(resources.Resource{
 		Name: "flightplan.git",
