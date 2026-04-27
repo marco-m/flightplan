@@ -24,20 +24,20 @@ func buildPipeline() error {
 
 	repo := pipeline.AddResource(resources.Resource{
 		Name: "flightplan.git",
-		// AddResource will set field Type using the method Type() of [plan.GitSource].
+		// AddResource will set field Type using the method Type() of [resources.Git].
 		Source: resources.Git{
 			Uri:    "https://github.com/marco-m/flightplan.git",
 			Branch: "master",
 		},
 	})
 
-	s3 := pipeline.AddResource(resources.Resource{
+	artifacts := pipeline.AddResource(resources.Resource{
 		Name: "artifacts.s3",
-		// AddResource will set field Type using the method Type() of [plan.S3Source].
+		// AddResource will set field Type using the method Type() of [resources.S3].
 		Source: resources.S3{
 			Bucket: "concourse",
 			// convention: builds/<pipeline-name>/<versioned-package-name>
-			Regexp:          "builds/simple-s3/gift-(.*)",
+			Regexp:          "builds/two-jobs/gift-(.*)",
 			Endpoint:        "((s3-endpoint))",
 			RegionName:      "((s3-region))",
 			AccessKeyID:     "((s3-access-key))",
@@ -50,6 +50,14 @@ func buildPipeline() error {
 		Source: resources.RegistryImage{Repository: "alpine"},
 	}
 
+	const ioDir = "gift"
+	const makeGift = `
+set -ex
+VERSION=$(date +%Y%m%d%H%M%S)
+GIFT=gift/gift-$VERSION
+echo "hello" > $GIFT
+`
+
 	kneadPizza := pipeline.AddJob(plan.Job{
 		Name: "knead-pizza",
 		Plan: []plan.Step{
@@ -59,31 +67,24 @@ func buildPipeline() error {
 				Config: &plan.TaskConfig{
 					Platform:      "linux",
 					ImageResource: &alpineImage,
-					Outputs: []plan.TaskOutput{
-						{Name: "gift"},
-					},
+					Outputs:       []plan.TaskOutput{{Name: ioDir}},
 					Run: plan.TaskCommand{
-						Path: "sh",
-						Args: []string{
-							"-c",
-							`set -e
-set -x
-VERSION=$(date +%Y%m%d%H%M%S)
-GIFT=gift/gift-$VERSION
-echo "hello" > $GIFT
-`,
-						},
+						Path: "sh", Args: []string{"-c", makeGift},
 					},
 				},
 			},
 			plan.Put{
-				Put: s3,
-				Params: resources.S3PutParams{
-					File: "gift/gift-*",
-				},
+				Put:    artifacts,
+				Params: resources.S3PutParams{File: "gift/gift-*"},
 			},
 		},
 	})
+
+	const unwrapGift = `
+set -ex
+cat artifacts.s3/gift*
+wc flightplan.git/README.md
+`
 
 	pipeline.AddJob(plan.Job{
 		Name: "bake-pizza",
@@ -94,17 +95,21 @@ echo "hello" > $GIFT
 				Trigger: true,
 			},
 			plan.Get{
-				Get:    s3,
+				Get:    artifacts,
 				Passed: []plan.JobHandle{kneadPizza},
 			},
 			plan.Task{
 				Task: "place-in-hoven",
 				Config: &plan.TaskConfig{
-					Platform:      "linux",
+					Platform: "linux",
+					Inputs: []plan.TaskInput{
+						{Name: repo.Name},
+						{Name: artifacts.Name},
+					},
 					ImageResource: &alpineImage,
 					Run: plan.TaskCommand{
-						Path: "echo",
-						Args: []string{"hot", "hot", "hot"},
+						Path: "sh",
+						Args: []string{"-c", unwrapGift},
 					},
 				},
 			},

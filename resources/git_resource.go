@@ -6,9 +6,18 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"reflect"
 )
 
-var ErrGitParamsEmpty = errors.New("Git: field Params cannot be empty")
+var (
+	ErrGitMissingUri = errors.New("Git.Uri cannot be empty")
+	//
+	ErrGitParamsWrongType            = errors.New("Params: wrong type")
+	ErrGitGetParamsEmpty             = errors.New("Get field Params provided but empty (remove or fill)")
+	ErrGitPutParamsEmpty             = errors.New("Put field Params cannot be empty")
+	ErrGitPutParamsMissingRepository = errors.New("Params: field Repository cannot be empty")
+	ErrGitPutParamsWrongRepoType     = errors.New("Params: field Repository: wrong type")
+)
 
 //
 
@@ -45,37 +54,75 @@ func (git Git) Type() string { return "git" }
 
 func (git Git) Validate() error {
 	if git.Uri == "" {
-		return fmt.Errorf("Git.Uri cannot be empty")
+		return ErrGitMissingUri
 	}
 	return nil
 }
 
 func (git Git) ValidateGet(params GetParams) error {
 	if params == nil {
-		return ErrGitParamsEmpty
+		// All Git get params are optional.
+		return nil
 	}
-	return params.(GitGetParams).Validate()
+	if p, ok := params.(GitGetParams); ok {
+		return p.Validate()
+	}
+	return fmt.Errorf("%w: have: %T; want: %T",
+		ErrGitParamsWrongType, params, GitGetParams{})
 }
 
 func (git Git) ValidatePut(params PutParams) error {
 	if params == nil {
-		return ErrGitParamsEmpty
+		// Some Git put params are required.
+		return ErrGitPutParamsEmpty
 	}
-	return params.(GitPutParams).Validate()
+	if p, ok := params.(GitPutParams); ok {
+		return p.Validate()
+	}
+	return fmt.Errorf("%w: have: %T; want: %T",
+		ErrGitParamsWrongType, params, GitPutParams{})
 }
 
-type GitGetParams struct{}
+type GitGetParams struct {
+	// Optional. If a positive integer is given, shallow clone the repository using the
+	// --depth option.
+	Depth int `json:"depth,omitzero"`
+	// Optional. Additional branches to fetch and make available as a local branch.
+	Fetch []string `json:"fetch,omitzero"`
+	// Optional	If true all tags in the repository will be fetched. If false no tags
+	// will be fetched. Overrides the fetch_tags source configuration.
+	FetchTags bool `json:"fetch_tags,omitzero"`
+	// Optional. Enable debugging output. Secrets may not be redacted.
+	Debug bool `json:"debug,omitzero"`
+}
 
 func (GitGetParams) IsGetParams() {}
 
-func (GitGetParams) Validate() error {
+func (gg GitGetParams) Validate() error {
+	// Since GitGetParams is not comparable because it contains []string, we must use
+	// reflection.
+	if reflect.ValueOf(gg).IsZero() {
+		return ErrGitGetParamsEmpty
+	}
 	return nil
 }
 
-type GitPutParams struct{}
+type GitPutParams struct {
+	// Required. The [Handle] of a [Git] repo to push to the source [Git] repo.
+	Repository *Handle `json:"repository"`
+	// Optional. Enable debugging output. Secrets may not be redacted.
+	Debug bool `json:"debug,omitzero"`
+}
 
 func (GitPutParams) IsPutParams() {}
 
-func (GitPutParams) Validate() error {
+func (gp GitPutParams) Validate() error {
+	if gp.Repository == nil {
+		return ErrGitPutParamsMissingRepository
+	}
+
+	if have, want := gp.Repository.Type, (Git{}).Type(); have != want {
+		return fmt.Errorf("%w: have: %q; want: %q", ErrGitPutParamsWrongRepoType, have, want)
+	}
 	return nil
 }

@@ -34,7 +34,7 @@ var (
 	ErrEmptyResourceName     = errors.New("Resource Name cannot be empty")
 	ErrSetResourceType       = errors.New("Resource Type cannot be set (will be set by Source.Type)")
 	ErrSourceValidation      = errors.New("validating Source")
-	ErrMissingSource         = errors.New("Source cannot be empty")
+	ErrMissingSource         = errors.New("field Source cannot be empty")
 	ErrGetValidation         = errors.New("Get validation")
 	ErrPutValidation         = errors.New("Put validation")
 	ErrSystem                = errors.New("system error")

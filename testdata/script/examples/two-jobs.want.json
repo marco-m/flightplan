@@ -13,7 +13,7 @@
       "type": "s3",
       "source": {
         "bucket": "concourse",
-        "regexp": "builds/simple-s3/gift-(.*)",
+        "regexp": "builds/two-jobs/gift-(.*)",
         "endpoint": "((s3-endpoint))",
         "region_name": "((s3-region))",
         "access_key_id": "((s3-access-key))",
@@ -49,7 +49,7 @@
               "path": "sh",
               "args": [
                 "-c",
-                "set -e\nset -x\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
+                "\nset -ex\nVERSION=$(date +%Y%m%d%H%M%S)\nGIFT=gift/gift-$VERSION\necho \"hello\" \u003e $GIFT\n"
               ]
             }
           }
@@ -88,12 +88,19 @@
                 "repository": "alpine"
               }
             },
+            "inputs": [
+              {
+                "name": "flightplan.git"
+              },
+              {
+                "name": "artifacts.s3"
+              }
+            ],
             "run": {
-              "path": "echo",
+              "path": "sh",
               "args": [
-                "hot",
-                "hot",
-                "hot"
+                "-c",
+                "\nset -ex\ncat artifacts.s3/gift*\nwc flightplan.git/README.md\n"
               ]
             }
           }

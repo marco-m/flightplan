@@ -147,11 +147,32 @@ type TaskConfig struct {
 	RootfsUri string `json:"rootfs_uri,omitzero"`
 }
 
-type TaskInput struct{}
-
-// https://concourse-ci.org/docs/tasks/#output-schema
-type TaskOutput struct {
+// The set of artifacts used by task, determining which artifacts will be available in the
+// current directory when the task runs. These are satisfied by get steps or
+// task-config.outputs of a previous task. These can also be provided by -i with fly execute.
+// If any required inputs are missing at run-time, then the task will error immediately.
+type TaskInput struct {
+	// Required. The name of the input.
 	Name string `json:"name"`
+	// Optional. The path where the input will be placed. If not specified, the input's
+	// name is used.
+	Path string `json:"path,omitzero"`
+	// Optional. Default false. If true, then the input is not required by the task.
+	// The task may run even if this input is missing.
+	Optional bool `json:"optional,omitzero"`
+}
+
+// The artifacts produced by the task.
+// Each output configures a directory to make available to later steps in the build plan.
+// The directory will be automatically created before the task runs, and the task should
+// place any artifacts it wants to export in the directory.
+// See https://concourse-ci.org/docs/tasks/#output-schema
+type TaskOutput struct {
+	// Required. The name of the output. The contents under path will be made available
+	// to the rest of the plan under this name.
+	Name string `json:"name"`
+	// Optional. The path to a directory where the output will be taken from. If not
+	// specified, the output's name is used.
 	Path string `json:"path,omitzero"`
 }
 

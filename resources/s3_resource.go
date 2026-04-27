@@ -14,6 +14,7 @@ var (
 	ErrS3BothRegexpAndVersionedFile = errors.New("S3: one of the fields Regexp or VersionedFile must be filled, not both")
 	//
 	ErrS3ParamsWrongType      = errors.New("Params: wrong type")
+	ErrS3GetParamsEmpty       = errors.New("Get field Params provided but empty, remove it")
 	ErrS3PutParamsEmpty       = errors.New("Put field Params cannot be empty")
 	ErrS3PutParamsMissingFile = errors.New("Params: field File cannot be empty")
 )
@@ -44,6 +45,9 @@ type S3 struct {
 	// Optional. UsePathStyle enables legacy path-style access for S3 compatible providers.
 	// The default is virtual path-style.
 	UsePathStyle bool `json:"use_path_style,omitzero"`
+	// Optional. Skip downloading object from S3. Useful only trigger the pipeline
+	// without using the object.
+	SkipDownload bool `json:"skip_download,omitzero"`
 }
 
 func (s3 S3) IsSource() {}
@@ -66,6 +70,7 @@ func (s3 S3) Validate() error {
 
 func (s3 S3) ValidateGet(params GetParams) error {
 	if params == nil {
+		// All S3 get params are optional.
 		return nil
 	}
 	if p, ok := params.(S3GetParams); ok {
@@ -77,6 +82,7 @@ func (s3 S3) ValidateGet(params GetParams) error {
 
 func (s3 S3) ValidatePut(params PutParams) error {
 	if params == nil {
+		// Some S3 put params are required.
 		return ErrS3PutParamsEmpty
 	}
 	if p, ok := params.(S3PutParams); ok {
@@ -86,16 +92,34 @@ func (s3 S3) ValidatePut(params PutParams) error {
 		ErrS3ParamsWrongType, params, S3PutParams{})
 }
 
-type S3GetParams struct{}
+// S3GetParams is the get "params" object of an S3 resource.
+// It implements the [GetParams] interface.
+// See https://github.com/concourse/s3-resource#parameters
+type S3GetParams struct {
+	// Optional. Skip downloading object from S3. Same as [S3.SkipDownload] in the source
+	// configuration, overridable in a specific get.
+	SkipDownload bool `json:"skip_download,omitzero"`
+	// Optional. If true and the file is an archive (tar, gzip tar, bzip2 tar, other
+	// gzip file, other bzip2 file, or zip), unpack the file. Gzip and bzip2 tarballs
+	// will be both decompressed and untarred. Ignored when get is running on the
+	// initial version.
+	Unpack bool `json:"unpack,omitzero"`
+	// Optional. Write object tags to file tags.json.
+	DownloadTags bool `json:"download_tags,omitzero"`
+}
 
 func (S3GetParams) IsGetParams() {}
 
 func (s3g S3GetParams) Validate() error {
+	var zero S3GetParams
+	if s3g == zero {
+		return ErrS3GetParamsEmpty
+	}
 	return nil
 }
 
-// S3PutParams is the Params obejct of an S3 resource.
-// It implements the [Params] interface.
+// S3PutParams is the put "params" object of an S3 resource.
+// It implements the [PutParams] interface.
 // See https://github.com/concourse/s3-resource#out-upload-an-object-to-the-bucket
 type S3PutParams struct {
 	// Required. File is the path to the file to upload, provided by an output of a task.

@@ -19,14 +19,6 @@ import (
 var update = flag.Bool("golden.update", false,
 	"update the golden files for this package; use with -run to update a single test")
 
-var resource = resources.Resource{
-	Name: "flightplan.git",
-	Source: resources.Git{
-		Uri:    "https://github.com/marco-m/flightplan.git",
-		Branch: "master",
-	},
-}
-
 func makeTestJob() plan.Job {
 	return plan.Job{
 		Name: "bake-pizza",

@@ -47,3 +47,7 @@ clean-coverage:
     @ rm -f ${COVER_MERGE}/*
     @ rm -f ${COVER_UNIT}/*
     @ rm -f ${COVER_INTEGRATION}/*
+
+lint:
+    go vet ./...
+    staticcheck
