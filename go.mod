@@ -1,6 +1,6 @@
 module github.com/marco-m/flightplan
 
-go 1.26.2
+go 1.26.3
 
 require (
 	github.com/marco-m/rosina v0.2.1-0.20260410182025-f46bb92d8d52
