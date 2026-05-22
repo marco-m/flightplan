@@ -19,12 +19,8 @@ import (
 	"rsc.io/script/scripttest"
 )
 
-func TestScriptExamples(t *testing.T) {
-	runScriptTests(t, "testdata/script/examples/*.txtar")
-}
-
-func TestScriptModule(t *testing.T) {
-	runScriptTests(t, "testdata/script/module/*.txtar")
+func TestScript(t *testing.T) {
+	runScriptTests(t, "testdata/script/*.txtar")
 }
 
 func runScriptTests(t *testing.T, pattern string) {

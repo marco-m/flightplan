@@ -18,7 +18,7 @@ stderr 'error: open /simple.json:'
 exec examples-simple
 ! stdout .
 stderr 'wrote pipeline to /.+/simple.json'
-cmp simple.json $TESTDATA/script/examples/simple.want.json
+cmp simple.json $TESTDATA/script/simple.want.json
 
 #
 # Generate pipeline, override name and directory, relative path
@@ -26,7 +26,7 @@ cmp simple.json $TESTDATA/script/examples/simple.want.json
 exec examples-simple -name banana -directory mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
-cmp mango/banana.json $TESTDATA/script/examples/simple.want.json
+cmp mango/banana.json $TESTDATA/script/simple.want.json
 
 #
 # Generate pipeline, override name and directory, absolute path
@@ -34,4 +34,4 @@ cmp mango/banana.json $TESTDATA/script/examples/simple.want.json
 exec examples-simple -name banana -directory $WORK/mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
-cmp $WORK/mango/banana.json $TESTDATA/script/examples/simple.want.json
+cmp $WORK/mango/banana.json $TESTDATA/script/simple.want.json
