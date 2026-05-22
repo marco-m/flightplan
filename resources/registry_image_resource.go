@@ -8,6 +8,7 @@ import (
 	"fmt"
 )
 
+//lint:file-ignore ST1005 Capitalized error strings are OK in this case.
 var (
 	ErrRegistryImageRepositoryEmpty       = errors.New("RegistryImage.Repository cannot be empty")
 	ErrRegistryImageParamsWrongType       = errors.New("Params: wrong type")

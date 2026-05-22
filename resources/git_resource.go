@@ -9,6 +9,7 @@ import (
 	"reflect"
 )
 
+//lint:file-ignore ST1005 Capitalized error strings are OK in this case.
 var (
 	ErrGitMissingUri = errors.New("Git.Uri cannot be empty")
 	//

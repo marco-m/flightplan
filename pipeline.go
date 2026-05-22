@@ -48,8 +48,6 @@ var (
 
 // Pipeline is used to construct a Concourse pipeline. Use [NewPipeline] to instantiate.
 type Pipeline struct {
-	// The current working directory.
-	cwd string
 	// The directory set on the command-line
 	dir string
 	// The name of the pipeline.

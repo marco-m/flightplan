@@ -8,6 +8,7 @@ import (
 	"fmt"
 )
 
+//lint:file-ignore ST1005 Capitalized error strings are OK in this case.
 var (
 	ErrS3MissingBucket              = errors.New("S3: field Bucket cannot be empty")
 	ErrS3NoRegexpNoVersionedFile    = errors.New("S3: one of the following fields must be filled: Regexp, VersionedFile")
