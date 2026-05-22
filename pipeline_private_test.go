@@ -4,7 +4,9 @@
 package flightplan
 
 import (
+	"fmt"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/marco-m/flightplan/internal/testhelpers"
@@ -45,11 +47,18 @@ func TestPipelineRelDirFailure(t *testing.T) {
 			Name:   "banana.git",
 			Source: resources.Git{Uri: "https://example.org/mango.git"},
 		})
-		pl.RelDir(repo)
-		assert.ErrorIs(t, pl.Errors(), wantErr, desc)
+		dir := pl.RelDir(repo)
+		assert.ErrorIs(t, pl.Errors(), wantErr, fmt.Sprintf("%s (%s)", desc, dir))
 	}
 
-	test("cannot create pipeline directory", []string{`--directory=/cannot-write`},
+	absDir := "/cannot-write"
+	if runtime.GOOS == "windows" {
+		// This can actually be written by GitHub Actions CI ???
+		// absDir = `C:\cannot-write`
+		absDir = `XXX:\cannot-write`
+	}
+
+	test("cannot create pipeline directory", []string{"--directory", absDir},
 		ErrCreatePipelineDir)
 
 	// FIXME I have a mess of path.Foo and filepath.Foo. Now, _normally_ I should use
