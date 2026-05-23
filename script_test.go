@@ -12,9 +12,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"rsc.io/script"
 	"rsc.io/script/scripttest"
 )
@@ -25,15 +28,15 @@ func TestScript(t *testing.T) {
 
 func runScriptTests(t *testing.T, pattern string) {
 	dir := t.TempDir()
-	if _, err := goBuild("examples-empty", "./examples/empty", dir); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := goBuild("examples-simple", "./examples/simple", dir); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := goBuild("examples-two-jobs", "./examples/two-jobs", dir); err != nil {
-		t.Fatal(err)
-	}
+
+	// If runScriptTests is called multiple times, build the executables only once.
+	var once sync.Once
+	once.Do(func() {
+		if err := buildAll(dir); err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	// The script environment variable PATH has meaning similar to PATH for a shell:
 	// an executable  'foo' in PATH can be invoked in a test script with 'exec foo ...'.
 	// That is, we put in PATH the systems under test (SUTs).
@@ -61,6 +64,28 @@ func runScriptTests(t *testing.T, pattern string) {
 
 	ctx := context.Background()
 	scripttest.Test(t, ctx, engine, env, pattern)
+}
+
+// Build all the executables below directory "examples".
+func buildAll(dstDir string) error {
+	srcDirs := []string{
+		"examples/empty",
+		"examples/pl-with-taskfile",
+		"examples/simple",
+		"examples/two-jobs",
+	}
+	group := new(errgroup.Group)
+	for _, srcDir := range srcDirs {
+		// Launch a goroutine to build the executable.
+		group.Go(func() error {
+			// "examples/two-jobs" => "examples-two-jobs"
+			name := strings.ReplaceAll(srcDir, "/", "-")
+			_, err := goBuild(name, srcDir, dstDir)
+			return err
+		})
+	}
+	// Wait for all builds to complete. First error will stop all goroutines.
+	return group.Wait()
 }
 
 // Change directory to 'srcDir' and build the Go code there, call the executable 'name',

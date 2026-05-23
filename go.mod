@@ -12,6 +12,7 @@ require (
 	github.com/alecthomas/repr v0.5.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	golang.org/x/sync v0.20.0
 	golang.org/x/tools v0.26.0 // indirect
 )
 
