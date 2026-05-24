@@ -60,21 +60,22 @@ func makeTestJobExternalTask(pl *plan.Pipeline, repo *resources.Handle, jobName,
 }
 
 func TestPipelinePath(t *testing.T) {
-	test := func(desc, name string, args []string, wantSuffix string) {
+	test := func(desc string, args []string, wantSuffix string) {
 		t.Helper()
-		pipeline := plan.NewPipeline(name, args)
-		assert.True(t, strings.HasSuffix(filepath.ToSlash(pipeline.Path()), wantSuffix),
-			"Path "+desc)
+		t.Chdir(t.TempDir()) // WARNING Chdir cannot be used with t.Parallel
+		pipeline := plan.NewPipeline("dummy", args)
+		path := filepath.ToSlash(pipeline.Path())
+		if !strings.HasSuffix(path, wantSuffix) {
+			t.Errorf("%s: path doesn't have suffix\npath:       %s\nwantSuffix: %s",
+				desc, path, wantSuffix)
+		}
 		assert.True(t, filepath.IsAbs(pipeline.Path()), "Path is absolute")
 	}
 
-	test("default dir", "dummy", nil, "/flightplan/dummy.json")
-	test("cli override name", "dummy", []string{"-name=mango"},
-		"/flightplan/mango.json")
-	test("cli override relative dir", "dummy", []string{"-directory=berry"},
-		"/flightplan/berry/dummy.json")
-	test("cli override absolute dir", "dummy", []string{"-directory=/mango"},
-		"/mango/dummy.json")
+	test("default dir", nil, "/dummy.json")
+	test("cli override name", []string{"-name=mango"}, "/mango.json")
+	test("cli override relative dir", []string{"-directory=berry"}, "/berry/dummy.json")
+	test("cli override absolute dir", []string{"-directory=/mango"}, "/mango/dummy.json")
 }
 
 func TestMustUseNewPipeline(t *testing.T) {

@@ -1,6 +1,6 @@
 # https://just.systems
 
-cover_dir := source_directory() + "/.scratch/cover"
+cover_dir := source_directory() + "/scratch/cover"
 export COVER_MERGE := cover_dir + "/merge"
 export COVER_UNIT := cover_dir + "/unit"
 # Used in script_test.go
@@ -10,9 +10,11 @@ default:
   just --list
 
 build:
-    go build -o out ./examples/empty
-    go build -o out ./examples/simple
-    go build -o out ./examples/two-jobs
+    go build -o scratch/ ./examples/empty
+    go build -o scratch/ ./examples/simple-anon-image
+    go build -o scratch/ ./examples/simple-named-image
+    go build -o scratch/ ./examples/two-jobs
+    go build -o scratch/ ./examples/with-taskfile
 
 # NOTE code test coverage:
 #
