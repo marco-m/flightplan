@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	plan "github.com/marco-m/flightplan"
+	plan "github.com/marco-m/flightplan/pkg/flightplan"
 )
 
 func main() {

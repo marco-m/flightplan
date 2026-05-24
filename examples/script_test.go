@@ -4,7 +4,7 @@
 // On Windows, the embedded files in a txtar are NOT extracted. Seems a bug.
 //go:build !windows
 
-package flightplan_test
+package examples_test
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -69,19 +68,17 @@ func runScriptTests(t *testing.T, pattern string) {
 // Build all the executables below directory "examples".
 func buildAll(dstDir string) error {
 	srcDirs := []string{
-		"examples/empty",
-		"examples/simple-anon-image",
-		"examples/simple-named-image",
-		"examples/two-jobs",
-		"examples/with-taskfile",
+		"empty",
+		"simple-anon-image",
+		"simple-named-image",
+		"two-jobs",
+		"with-taskfile",
 	}
 	group := new(errgroup.Group)
 	for _, srcDir := range srcDirs {
 		// Launch a goroutine to build the executable.
 		group.Go(func() error {
-			// "examples/two-jobs" => "examples-two-jobs"
-			name := strings.ReplaceAll(srcDir, "/", "-")
-			_, err := goBuild(name, srcDir, dstDir)
+			_, err := goBuild(srcDir, srcDir, dstDir)
 			return err
 		})
 	}

@@ -1,7 +1,7 @@
 #
 # Generate pipeline, default values
 #
-exec examples-simple-named-image
+exec simple-named-image
 ! stdout .
 stderr 'wrote pipeline to /.+/simple-named-image.json'
 cmp simple-named-image.json $TESTDATA/script/simple-named-image.want.json
@@ -9,7 +9,7 @@ cmp simple-named-image.json $TESTDATA/script/simple-named-image.want.json
 #
 # Generate pipeline, override name and directory, relative path
 #
-exec examples-simple-named-image -name banana -directory mango
+exec simple-named-image -name banana -directory mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
 cmp mango/banana.json $TESTDATA/script/simple-named-image.want.json
@@ -17,7 +17,7 @@ cmp mango/banana.json $TESTDATA/script/simple-named-image.want.json
 #
 # Generate pipeline, override name and directory, absolute path
 #
-exec examples-simple-named-image -name banana -directory $WORK/mango
+exec simple-named-image -name banana -directory $WORK/mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
 cmp $WORK/mango/banana.json $TESTDATA/script/simple-named-image.want.json

@@ -1,6 +1,6 @@
 #
 # Empty pipeline returns an error.
 #
-! exec examples-empty
+! exec empty
 ! stdout .
 stderr 'Render: pipeline must have at least one job'

@@ -6,7 +6,7 @@ package flightplan_test
 import (
 	"testing"
 
-	plan "github.com/marco-m/flightplan"
+	plan "github.com/marco-m/flightplan/pkg/flightplan"
 
 	"github.com/marco-m/rosina/assert"
 	"github.com/marco-m/rosina/check"

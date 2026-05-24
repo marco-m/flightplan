@@ -1,21 +1,21 @@
 #
 # Report error if cannot create directory
 #
-! exec examples-simple-anon-image -directory /mango
+! exec simple-anon-image -directory /mango
 ! stdout .
 stderr 'error: .* NewPipeline: cannot create pipeline directory: mkdir /mango:'
 
 #
 # Report error if cannot create file
 #
-! exec examples-simple-anon-image -directory /
+! exec simple-anon-image -directory /
 ! stdout .
 stderr 'error: open /simple-anon-image.json:'
 
 #
 # Generate pipeline, default values
 #
-exec examples-simple-anon-image
+exec simple-anon-image
 ! stdout .
 stderr 'wrote pipeline to /.+/simple-anon-image.json'
 cmp simple-anon-image.json $TESTDATA/script/simple-anon-image.want.json
@@ -23,7 +23,7 @@ cmp simple-anon-image.json $TESTDATA/script/simple-anon-image.want.json
 #
 # Generate pipeline, override name and directory, relative path
 #
-exec examples-simple-anon-image -name banana -directory mango
+exec simple-anon-image -name banana -directory mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
 cmp mango/banana.json $TESTDATA/script/simple-anon-image.want.json
@@ -31,7 +31,7 @@ cmp mango/banana.json $TESTDATA/script/simple-anon-image.want.json
 #
 # Generate pipeline, override name and directory, absolute path
 #
-exec examples-simple-anon-image -name banana -directory $WORK/mango
+exec simple-anon-image -name banana -directory $WORK/mango
 ! stdout .
 stderr 'wrote pipeline to /.+/mango/banana.json'
 cmp $WORK/mango/banana.json $TESTDATA/script/simple-anon-image.want.json

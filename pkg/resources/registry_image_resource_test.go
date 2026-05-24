@@ -6,7 +6,7 @@ package resources_test
 import (
 	"testing"
 
-	"github.com/marco-m/flightplan/resources"
+	"github.com/marco-m/flightplan/pkg/resources"
 	"github.com/marco-m/rosina/assert"
 )
 

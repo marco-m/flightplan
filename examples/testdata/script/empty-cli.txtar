@@ -1,21 +1,21 @@
 #
 # Command-line help.
 #
-exec examples-empty -h
+exec empty -h
 ! stdout .
 cmp stderr output.want
 
 #
 # Command-line unrecognized argument.
 #
-! exec examples-empty ciao bello
+! exec empty ciao bello
 ! stdout .
 stderr 'unrecognized arguments: ciao bello'
 
 -- output.want --
-examples-empty -- generate a Concourse pipeline with flightplan
+empty -- generate a Concourse pipeline with flightplan
 
-Usage: examples-empty [ARGS]
+Usage: empty [ARGS]
 
 Options:
   -directory string

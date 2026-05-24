@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/marco-m/flightplan/internal/testhelpers"
-	"github.com/marco-m/flightplan/resources"
+	"github.com/marco-m/flightplan/pkg/resources"
 	"github.com/marco-m/rosina/assert"
 	"github.com/marco-m/rosina/check"
 )

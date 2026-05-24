@@ -9,8 +9,8 @@ import (
 	"os"
 	"path"
 
-	plan "github.com/marco-m/flightplan"
-	"github.com/marco-m/flightplan/resources"
+	plan "github.com/marco-m/flightplan/pkg/flightplan"
+	"github.com/marco-m/flightplan/pkg/resources"
 )
 
 func main() {

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/marco-m/flightplan/internal/goof"
-	"github.com/marco-m/flightplan/resources"
+	"github.com/marco-m/flightplan/pkg/resources"
 	"github.com/mitchellh/copystructure"
 )
 

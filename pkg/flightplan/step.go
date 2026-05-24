@@ -6,7 +6,7 @@ package flightplan
 import (
 	"fmt"
 
-	"github.com/marco-m/flightplan/resources"
+	"github.com/marco-m/flightplan/pkg/resources"
 )
 
 // Step is a step in a [Job.Plan]. You compose the plan using the following concrete
