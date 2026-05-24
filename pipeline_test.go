@@ -218,7 +218,7 @@ echo "hello" > $GIFT
 
 func TestPipelineExternalTaskfileFailure(t *testing.T) {
 	dir := t.TempDir()
-	pl := plan.NewPipeline("pl-external-taskfile", []string{"--directory", dir})
+	pl := plan.NewPipeline("external-taskfile", []string{"--directory", dir})
 	repo := pl.AddResource(resources.Resource{
 		Name:   "banana.git",
 		Source: resources.Git{Uri: "https://example.org/flightplan.git"},
@@ -233,7 +233,7 @@ func TestPipelineExternalTaskfileFailure(t *testing.T) {
 func TestPipelineCreateOneExternalTaskfileSuccess(t *testing.T) {
 	dir := t.TempDir()
 	testhelpers.MakeFakeGitRepo(t, dir)
-	name := "pl-with-taskfile"
+	name := "with-taskfile"
 	pl := plan.NewPipeline(name, []string{"--directory", dir})
 	repo := pl.AddResource(resources.Resource{
 		Name:   "banana.git",
@@ -244,7 +244,7 @@ func TestPipelineCreateOneExternalTaskfileSuccess(t *testing.T) {
 	err := pl.Render()
 	assert.NoError(t, err, "Render")
 
-	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-with-taskfile.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/with-taskfile.json", *update)
 	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
 		"testdata/task-1.json", *update)
 }
@@ -252,7 +252,7 @@ func TestPipelineCreateOneExternalTaskfileSuccess(t *testing.T) {
 func TestPipelineCreateTwoExternalTaskfileSuccess(t *testing.T) {
 	dir := t.TempDir()
 	testhelpers.MakeFakeGitRepo(t, dir)
-	name := "pl-with-two-taskfiles"
+	name := "with-two-taskfiles"
 	pl := plan.NewPipeline(name, []string{"--directory", dir})
 	repo := pl.AddResource(resources.Resource{
 		Name:   "banana.git",
@@ -264,7 +264,7 @@ func TestPipelineCreateTwoExternalTaskfileSuccess(t *testing.T) {
 	err := pl.Render()
 	assert.NoError(t, err, "Render")
 
-	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-with-two-taskfiles.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/with-two-taskfiles.json", *update)
 	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
 		"testdata/task-1.json", *update)
 	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-2.json"),
@@ -274,7 +274,7 @@ func TestPipelineCreateTwoExternalTaskfileSuccess(t *testing.T) {
 func TestPipelineReuseExternalTaskfileSuccess(t *testing.T) {
 	dir := t.TempDir()
 	testhelpers.MakeFakeGitRepo(t, dir)
-	name := "pl-with-two-taskfiles"
+	name := "with-two-taskfiles"
 	pl := plan.NewPipeline(name, []string{"--directory", dir})
 	repo := pl.AddResource(resources.Resource{
 		Name:   "banana.git",
@@ -297,7 +297,7 @@ func TestPipelineReuseExternalTaskfileSuccess(t *testing.T) {
 	err := pl.Render()
 	assert.NoError(t, err, "Render")
 
-	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/pl-reuse-taskfiles.json", *update)
+	testhelpers.AssertRenderedEqualsGolden(t, pl.Path(), "testdata/reuse-taskfiles.json", *update)
 	testhelpers.AssertRenderedEqualsGolden(t, filepath.Join(dir, "tasks/task-1.json"),
 		"testdata/task-1.json", *update)
 	// There is no "tasks/task-2.json" !
