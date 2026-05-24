@@ -10,7 +10,7 @@ stdout 'logging in to team'
 stdout 'target saved'
 
 # set-pipeline
-fly -t dev set-pipeline --non-interactive -p simple-anon-image -c $TESTDATA/script/simple-anon-image.want.json
+fly -t dev set-pipeline --non-interactive -p simple-anon-image -c $TESTDATA/script/simple-anon-image.json
 
 # unpause-pipeline
 fly -t dev unpause-pipeline -p simple-anon-image

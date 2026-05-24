@@ -17,7 +17,7 @@ import (
 	"rsc.io/script/scripttest"
 )
 
-func TestScript(t *testing.T) {
+func TestScriptFlightplan(t *testing.T) {
 	runScriptTests(t, "testdata/script/*.txtar")
 }
 
