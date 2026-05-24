@@ -24,25 +24,25 @@ const (
 	StatusErrored   BuildStatus = "errored"
 	StatusAborted   BuildStatus = "aborted"
 	//
-	StatusUnknown BuildStatus = "unknown"
+	StatusInvalid BuildStatus = "invalid"
 )
 
-func ParseStatus(s string) (BuildStatus, error) {
+func ParseStatus(s string) BuildStatus {
 	switch s {
 	case "started":
-		return StatusStarted, nil
+		return StatusStarted
 	case "pending":
-		return StatusPending, nil
+		return StatusPending
 	case "succeeded":
-		return StatusSucceeded, nil
+		return StatusSucceeded
 	case "failed":
-		return StatusFailed, nil
+		return StatusFailed
 	case "errored":
-		return StatusErrored, nil
+		return StatusErrored
 	case "aborted":
-		return StatusAborted, nil
+		return StatusAborted
 	default:
-		return StatusUnknown, fmt.Errorf("parse: unknown status: %q", s)
+		return StatusInvalid
 	}
 }
 
@@ -51,23 +51,34 @@ func (status BuildStatus) String() string {
 }
 
 type Build struct {
-	Id           int64       `json:"id"`
-	TeamName     string      `json:"team_name"`
-	Name         string      `json:"name"`
-	Status       BuildStatus `json:"status"`
-	ApiUrl       string      `json:"api_url,omitempty"`
-	JobName      string      `json:"job_name"`
-	PipelineId   int64       `json:"pipeline_id"`
-	PipelineName string      `json:"pipeline_name"`
-	StartTime    time.Time   `json:"start_time"` // on the wire: int64
-	EndTime      time.Time   `json:"end_time"`   // on the wire: int64
-	CreatedBy    string      `json:"created_by,omitempty"`
+	ID                   int           `json:"id"`
+	TeamName             string        `json:"team_name"`
+	Name                 string        `json:"name"`
+	Status               BuildStatus   `json:"status"`
+	APIURL               string        `json:"api_url"`
+	Comment              string        `json:"comment,omitempty"`
+	JobName              string        `json:"job_name,omitempty"`
+	ResourceName         string        `json:"resource_name,omitempty"`
+	PipelineID           int           `json:"pipeline_id,omitempty"`
+	PipelineName         string        `json:"pipeline_name,omitempty"`
+	PipelineInstanceVars InstanceVars  `json:"pipeline_instance_vars,omitempty"`
+	StartTime            time.Time     `json:"start_time,omitempty"` // on the wire: int64
+	EndTime              time.Time     `json:"end_time,omitempty"`   // on the wire: int64
+	ReapTime             time.Time     `json:"reap_time,omitempty"`  // on the wire: int64
+	RerunNumber          int           `json:"rerun_number,omitempty"`
+	RerunOf              *RerunOfBuild `json:"rerun_of,omitempty"`
+	CreatedBy            *string       `json:"created_by,omitempty"`
+}
+
+type RerunOfBuild struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // UnmarshalJSON is normally not needed; function [json.Unmarshal] already knows
 // what to do. In this case, we override the default behavior because we want to
-// transparently parse fields "start_time" and "end_time", which on the wire are
-// encoded as int64 (Unix time), to the Go-native [time.Time].
+// transparently parse time-related fields, which on the wire are encoded as int64
+// (Unix time), to the Go-native [time.Time].
 //
 // For a detailed explanation, see
 // - https://eli.thegreenplace.net/2019/go-json-cookbook/
@@ -75,8 +86,9 @@ type Build struct {
 func (bld *Build) UnmarshalJSON(data []byte) error {
 	type Alias Build // Avoid infinite loop calling UnmarshalJSON.
 	aux := &struct {
-		StartTime int64 `json:"start_time"`
-		EndTime   int64 `json:"end_time"`
+		StartTime int64 `json:"start_time,omitempty"`
+		EndTime   int64 `json:"end_time,omitempty"`
+		ReapTime  int64 `json:"reap_time,omitempty"`
 		*Alias
 	}{
 		Alias: (*Alias)(bld),
@@ -86,6 +98,7 @@ func (bld *Build) UnmarshalJSON(data []byte) error {
 	}
 	bld.StartTime = time.Unix(aux.StartTime, 0).UTC()
 	bld.EndTime = time.Unix(aux.EndTime, 0).UTC()
+	bld.ReapTime = time.Unix(aux.ReapTime, 0).UTC()
 
 	return nil
 }
@@ -93,12 +106,14 @@ func (bld *Build) UnmarshalJSON(data []byte) error {
 func (bld *Build) MarshalJSON() ([]byte, error) {
 	type Alias Build // Avoid infinite loop calling MarshalJSON.
 	return json.Marshal(&struct {
-		StartTime int64 `json:"start_time"`
-		EndTime   int64 `json:"end_time"`
+		StartTime int64 `json:"start_time,omitempty"`
+		EndTime   int64 `json:"end_time,omitempty"`
+		ReapTime  int64 `json:"reap_time,omitempty"`
 		*Alias
 	}{
 		StartTime: bld.StartTime.Unix(),
 		EndTime:   bld.EndTime.Unix(),
+		ReapTime:  bld.ReapTime.Unix(),
 		Alias:     (*Alias)(bld),
 	})
 }
@@ -107,14 +122,12 @@ func (bld *Build) MarshalJSON() ([]byte, error) {
 // in team 'teamName'.
 //
 // From https://github.com/concourse/concourse/blob/master/atc/routes.go
-// Path: "/api/v1/teams/:team_name/pipelines/:pipeline_name/builds"
-// Method: "GET"
-// Name: ListPipelineBuilds
-func (cl *Client) ListPipelineBuilds(ctx context.Context,
-	teamName, pipelineName string,
+// Path: /api/v1/teams/:team_name/pipelines/:pipeline_name/builds?limit=N
+// Method: GET
+func (cl *Client) ListPipelineBuilds(ctx context.Context, team, pipeline string,
 ) ([]Build, error) {
 	urlo, err := url.JoinPath(cl.Server,
-		"/api/v1/teams/", teamName, "/pipelines", pipelineName, "/builds")
+		"/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
 	if err != nil {
 		return nil, err
 	}
