@@ -11,6 +11,7 @@ import (
 	"github.com/marco-m/rosina/assert"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 
+	"github.com/marco-m/flightplan/internal/testhelpers"
 	"github.com/marco-m/flightplan/pkg/concourse"
 )
 
@@ -19,6 +20,7 @@ var unixEpoch = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 func TestClient_ListPipelineBuilds(t *testing.T) {
 	// Arrange recorder.
 	rec, err := recorder.New("testdata/list-pipeline-builds-short",
+		recorder.WithHook(testhelpers.BodyFormatHook, recorder.AfterCaptureHook),
 		recorder.WithSkipRequestLatency(true),
 	)
 	assert.NoError(t, err, "recorder.New")
@@ -30,6 +32,7 @@ func TestClient_ListPipelineBuilds(t *testing.T) {
 	// Arrange SUT.
 	const team = "main"
 	const pipeline = "concourse"
+	const limit = 2
 	concourseClient, err := concourse.NewClient(concourse.Client{
 		Server:     "https://ci.concourse-ci.org",
 		HttpClient: rec.GetDefaultClient(),
@@ -38,36 +41,35 @@ func TestClient_ListPipelineBuilds(t *testing.T) {
 	ctx := context.Background()
 
 	// Act.
-	have, err := concourseClient.ListPipelineBuilds(ctx, team, pipeline)
+	have, err := concourseClient.ListPipelineBuilds(ctx, team, pipeline, limit)
 
 	// Assert.
 	assert.NoError(t, err, "ListPipelineBuilds")
-
 	want := []concourse.Build{
 		{
-			ID:           214953806,
+			ID:           562340543,
 			TeamName:     "main",
-			Name:         "575",
-			Status:       "started",
-			APIURL:       "/api/v1/builds/214953806",
-			JobName:      "dev-image",
+			Name:         "2668",
+			Status:       concourse.StatusSucceeded,
+			APIURL:       "/api/v1/builds/562340543",
+			JobName:      "bosh-check-props",
 			PipelineID:   24,
 			PipelineName: "concourse",
-			StartTime:    time.Date(2023, time.October, 16, 14, 7, 45, 0, time.UTC),
-			EndTime:      unixEpoch,
+			StartTime:    time.Date(2026, time.May, 24, 23, 29, 58, 0, time.UTC),
+			EndTime:      time.Date(2026, time.May, 24, 23, 30, 46, 0, time.UTC),
 			ReapTime:     unixEpoch,
 		},
 		{
-			ID:           214953805,
+			ID:           562340123,
 			TeamName:     "main",
-			Name:         "402",
-			Status:       "succeeded",
-			APIURL:       "/api/v1/builds/214953805",
-			JobName:      "quickstart-smoke",
+			Name:         "1627",
+			Status:       concourse.StatusSucceeded,
+			APIURL:       "/api/v1/builds/562340123",
+			JobName:      "k8s-check-helm-params",
 			PipelineID:   24,
 			PipelineName: "concourse",
-			StartTime:    time.Date(2023, time.October, 16, 14, 7, 45, 0, time.UTC),
-			EndTime:      time.Date(2023, time.October, 16, 14, 11, 55, 0, time.UTC),
+			StartTime:    time.Date(2026, time.May, 24, 23, 25, 38, 0, time.UTC),
+			EndTime:      time.Date(2026, time.May, 24, 23, 27, 32, 0, time.UTC),
 			ReapTime:     unixEpoch,
 		},
 	}

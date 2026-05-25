@@ -7,39 +7,59 @@ interactions:
         proto_major: 1
         proto_minor: 1
         content_length: 0
-        transfer_encoding: []
-        trailer: {}
         host: ci.concourse-ci.org
-        remote_addr: ""
-        request_uri: ""
-        body: ""
-        form: {}
-        headers: {}
-        url: https://ci.concourse-ci.org/api/v1/teams/main/pipelines/concourse/builds
+        form:
+            limit:
+                - "2"
+        url: https://ci.concourse-ci.org/api/v1/teams/main/pipelines/concourse/builds?limit=2
         method: GET
       response:
         proto: HTTP/2.0
         proto_major: 2
         proto_minor: 0
-        transfer_encoding: []
-        trailer: {}
-        content_length: -1
-        uncompressed: true
-        body: |
-            [{"id":214953806,"team_name":"main","name":"575","status":"started","api_url":"/api/v1/builds/214953806","job_name":"dev-image","pipeline_id":24,"pipeline_name":"concourse","start_time":1697465265},{"id":214953805,"team_name":"main","name":"402","status":"succeeded","api_url":"/api/v1/builds/214953805","job_name":"quickstart-smoke","pipeline_id":24,"pipeline_name":"concourse","start_time":1697465265,"end_time":1697465515}]
+        content_length: 465
+        body: |-
+            [
+              {
+                "api_url": "/api/v1/builds/562340543",
+                "end_time": 1779665446,
+                "id": 562340543,
+                "job_name": "bosh-check-props",
+                "name": "2668",
+                "pipeline_id": 24,
+                "pipeline_name": "concourse",
+                "start_time": 1779665398,
+                "status": "succeeded",
+                "team_name": "main"
+              },
+              {
+                "api_url": "/api/v1/builds/562340123",
+                "end_time": 1779665252,
+                "id": 562340123,
+                "job_name": "k8s-check-helm-params",
+                "name": "1627",
+                "pipeline_id": 24,
+                "pipeline_name": "concourse",
+                "start_time": 1779665138,
+                "status": "succeeded",
+                "team_name": "main"
+              }
+            ]
         headers:
             Cache-Control:
                 - no-store, private
+            Content-Length:
+                - "465"
             Content-Type:
                 - application/json
             Date:
-                - Mon, 16 Oct 2023 14:22:36 GMT
+                - Mon, 25 May 2026 14:06:41 GMT
             Link:
-                - <https://ci.concourse-ci.org/api/v1/teams/main/pipelines/concourse/builds?to=214442133&limit=100>; rel="next"
+                - <https://ci.concourse-ci.org/api/v1/teams/main/pipelines/concourse/builds?to=562340122&limit=2>; rel="next"
             Vary:
                 - Accept-Encoding
             X-Concourse-Version:
-                - 0.0.0-dev
+                - 8.2.2
             X-Content-Type-Options:
                 - nosniff
             X-Download-Options:
@@ -48,4 +68,4 @@ interactions:
                 - 1; mode=block
         status: 200 OK
         code: 200
-        duration: 2.7483955s
+        duration: 1.701089291s

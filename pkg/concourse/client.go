@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 // Client is a minimal client for the Concourse HTTP API.
@@ -31,11 +32,13 @@ func NewClient(opts Client) (*Client, error) {
 	return &client, nil
 }
 
-func get(ctx context.Context, hclient *http.Client, urlo string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlo, nil)
+func get(ctx context.Context, hclient *http.Client, theUrl string, values url.Values,
+) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, theUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("get: new request: %s", err)
 	}
+	req.URL.RawQuery = values.Encode()
 	resp, err := hclient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("get: do: %s", err)

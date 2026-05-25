@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -125,15 +126,18 @@ func (bld *Build) MarshalJSON() ([]byte, error) {
 // Path: /api/v1/teams/:team_name/pipelines/:pipeline_name/builds?limit=N
 // Method: GET
 func (cl *Client) ListPipelineBuilds(ctx context.Context, team, pipeline string,
+	limit int,
 ) ([]Build, error) {
-	urlo, err := url.JoinPath(cl.Server,
+	theUrl, err := url.JoinPath(cl.Server,
 		"/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
 	if err != nil {
 		return nil, err
 	}
-	body, err := get(ctx, cl.HttpClient, urlo)
+	values := url.Values{}
+	values.Set("limit", strconv.Itoa(limit))
+	body, err := get(ctx, cl.HttpClient, theUrl, values)
 	if err != nil {
-		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", urlo, err)
+		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", theUrl, err)
 	}
 	var builds []Build
 	if err := json.Unmarshal(body, &builds); err != nil {
