@@ -130,7 +130,9 @@ func (cl *Client) ListPipelineBuilds(ctx context.Context, team, pipeline string,
 ) ([]Build, error) {
 	uri := cl.serverURL.JoinPath("/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
 	values := url.Values{}
-	values.Set("limit", strconv.Itoa(limit))
+	if limit > 0 {
+		values.Set("limit", strconv.Itoa(limit))
+	}
 	body, err := get(ctx, cl.httpClient, uri.String(), values)
 	if err != nil {
 		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", uri, err)

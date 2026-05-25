@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/marco-m/rosina/assert"
-	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 
 	"github.com/marco-m/flightplan/internal/testhelpers"
 	"github.com/marco-m/flightplan/pkg/concourse"
@@ -19,21 +18,14 @@ var unixEpoch = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 func TestClient_ListPipelineBuilds(t *testing.T) {
 	// Arrange recorder.
-	rec, err := recorder.New("testdata/list-pipeline-builds-short",
-		recorder.WithHook(testhelpers.BodyFormatHook, recorder.AfterCaptureHook),
-		recorder.WithSkipRequestLatency(true),
-	)
-	assert.NoError(t, err, "recorder.New")
-	// Teardown recorder. Needed to save the cassette on first run.
-	t.Cleanup(func() {
-		assert.NoError(t, rec.Stop(), "rec.Stop")
-	})
+	rec, teardown := testhelpers.SetupRecorder(t, "testdata/list-pipeline-builds-short")
+	t.Cleanup(func() { teardown(t) })
 
 	// Arrange SUT.
 	const team = "main"
 	const pipeline = "concourse"
 	const limit = 2
-	concourseClient, err := concourse.NewClient(concourse.ClientArgs{
+	client, err := concourse.NewClient(concourse.ClientArgs{
 		ServerURL:  "https://ci.concourse-ci.org",
 		HttpClient: rec.GetDefaultClient(),
 	})
@@ -41,7 +33,7 @@ func TestClient_ListPipelineBuilds(t *testing.T) {
 	ctx := context.Background()
 
 	// Act.
-	have, err := concourseClient.ListPipelineBuilds(ctx, team, pipeline, limit)
+	have, err := client.ListPipelineBuilds(ctx, team, pipeline, limit)
 
 	// Assert.
 	assert.NoError(t, err, "ListPipelineBuilds")
