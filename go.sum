@@ -2,8 +2,8 @@ github.com/alecthomas/repr v0.5.2 h1:SU73FTI9D1P5UNtvseffFSGmdNci/O6RsqzeXJtP0Qs
 github.com/alecthomas/repr v0.5.2/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/marco-m/rosina v0.2.1-0.20260410182025-f46bb92d8d52 h1:XeI4wciAL1p9/xrd2vvemNCSVRKiAVwlisgg7hC8edE=
-github.com/marco-m/rosina v0.2.1-0.20260410182025-f46bb92d8d52/go.mod h1:U1TRxF7xCF1J8lhP/OABVz5UC9UmHZdIj+o8PSlXY+U=
+github.com/marco-m/rosina v0.3.1-0.20260528201634-bd3639efdf46 h1:RMJJGi7eVvLGv+TNbl4ZnAG0txLEjCstylsbL4d5ilM=
+github.com/marco-m/rosina v0.3.1-0.20260528201634-bd3639efdf46/go.mod h1:U1TRxF7xCF1J8lhP/OABVz5UC9UmHZdIj+o8PSlXY+U=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=

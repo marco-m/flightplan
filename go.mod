@@ -7,7 +7,7 @@ require github.com/mitchellh/copystructure v1.2.0
 
 // Test dependencies.
 require (
-	github.com/marco-m/rosina v0.2.1-0.20260410182025-f46bb92d8d52
+	github.com/marco-m/rosina v0.3.1-0.20260528201634-bd3639efdf46
 	golang.org/x/sync v0.20.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.6
 	rsc.io/script v0.0.2
