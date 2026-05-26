@@ -4,9 +4,12 @@
 package concourse
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
+
+var ErrUnauthorized = errors.New("Unauthorized")
 
 func responseError(statusCode int, body []byte, readErr error) error {
 	if readErr != nil {

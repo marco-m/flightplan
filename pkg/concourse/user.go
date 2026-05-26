@@ -81,5 +81,64 @@ func (cl *Client) PasswordLogin(ctx context.Context, username, password string) 
 	}
 	cl.token = grant.AccessToken
 
+	//
+	// The following API calls are done by "fly login".
+	// They are not needed in orded to remain authenticated.
+	//
+
+	_, err = cl.GetUserInfo(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
 	return nil
+}
+
+type UserInfo struct {
+	Sub           string              `json:"sub"`
+	Name          string              `json:"name"`
+	UserId        string              `json:"user_id"`
+	UserName      string              `json:"user_name"`
+	Email         string              `json:"email"`
+	IsAdmin       bool                `json:"is_admin"`
+	IsSystem      bool                `json:"is_system"`
+	Teams         map[string][]string `json:"teams"`
+	Connector     string              `json:"connector"`
+	DisplayUserId string              `json:"display_user_id"`
+}
+
+// GetUserInfo returns [UserInfo] about the user associated to the bearer token of the
+// request.
+//
+// From https://github.com/concourse/concourse/blob/master/atc/routes.go
+// Path: /api/v1/user
+// Method: GET
+func (cl *Client) GetUserInfo(ctx context.Context) (UserInfo, error) {
+	const op = "GetUserInfo"
+	uri := cl.serverURL.JoinPath("/api/v1/user")
+	header := make(http.Header)
+	header.Set("Authorization", "Bearer "+cl.token)
+
+	resp, err := get(ctx, cl.httpClient, uri.String(), header, nil)
+	if err != nil {
+		return UserInfo{}, fmt.Errorf("%s: %s", op, err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		var userInfo UserInfo
+		err = json.NewDecoder(resp.Body).Decode(&userInfo)
+		if err != nil {
+			return UserInfo{}, fmt.Errorf("%s: %s", op, err)
+		}
+		return userInfo, nil
+	case http.StatusUnauthorized:
+		body, _ := io.ReadAll(resp.Body)
+		return UserInfo{}, fmt.Errorf("%s: %w (%s)", op, ErrUnauthorized, string(body))
+	default:
+		body, err := io.ReadAll(resp.Body)
+		return UserInfo{}, fmt.Errorf("%s: %s", op, responseError(resp.StatusCode, body, err))
+
+	}
 }
