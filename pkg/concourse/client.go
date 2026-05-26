@@ -5,6 +5,7 @@ package concourse
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 )
@@ -14,6 +15,28 @@ import (
 type Client struct {
 	serverURL  *url.URL
 	httpClient *http.Client
+	token      string `json:"-"` // Sensitive!
+}
+
+// LogValue redacts sensitive fields when Client is passed to package slog.
+func (cl Client) LogValue() slog.Value {
+	return slog.GroupValue(
+		slog.String("Server", cl.serverURL.String()),
+		slog.String("HttpClient", fmt.Sprint(cl.httpClient)),
+		slog.String("token", "[redacted]"),
+	)
+}
+
+// String redacts sensitive fields when Client is printed with a string verb.
+// See https://pkg.go.dev/fmt#Stringer.
+func (cl Client) String() string {
+	return cl.LogValue().String()
+}
+
+// GoString redacts sensitive fields when Client is printed with verb "%#v".
+// See https://pkg.go.dev/fmt#GoStringer
+func (cl Client) GoString() string {
+	return cl.String()
 }
 
 // Arguments to [NewClient].

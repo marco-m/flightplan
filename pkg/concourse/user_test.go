@@ -45,3 +45,27 @@ func TestClient_GetInfo(t *testing.T) {
 	}
 	assert.DeepEqual(t, have, want, "GetInfo")
 }
+
+func TestClient_PasswordLogin(t *testing.T) {
+	// Arrange recorder.
+	rec, teardown := testhelpers.SetupRecorder(t, "testdata/password-login")
+	t.Cleanup(func() { teardown(t) })
+
+	// Arrange SUT.
+	client, err := concourse.NewClient(concourse.ClientArgs{
+		ServerURL:  "http://localhost:8080",
+		HttpClient: rec.GetDefaultClient(),
+	})
+	assert.NoError(t, err, "concourse.NewClient")
+	ctx := context.Background()
+
+	// Act.
+	const username = "main"
+	const password = "main"
+	err = client.PasswordLogin(ctx, username, password)
+
+	// Assert.
+	assert.NoError(t, err, "PasswordLogin")
+	// NOTE verification of the fact that the token is set in Client will be done
+	// indirectly by subsequent tests.
+}

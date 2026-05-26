@@ -44,3 +44,42 @@ func (cl *Client) GetInfo(ctx context.Context) (Info, error) {
 	}
 	return info, nil
 }
+
+// PasswordLogin performs a username and password "login", by asking for an Oauth access
+// token and storing it in Client, so that subsequent operations will be authenticated
+// with the granted token.
+//
+// Written by observing the traffic of "fly login -p password -u username -t team"
+//
+// Flow:
+//
+//	>> GET http://localhost/api/v1/info
+//	<< 200 OK
+//
+//	>> POST http://localhost/sky/issuer/token
+//	<< 200 OK
+//
+//	>> GET http://localhost/api/v1/user
+//	<< 200 OK
+//
+//	>> GET http://localhost/api/v1/teams
+//	<< 200 OK
+func (cl *Client) PasswordLogin(ctx context.Context, username, password string) error {
+	const op = "PasswordLogin"
+
+	// This API call is done by "fly login". Fly looks at the reported version and
+	// decideds wether to continue or not. It is not needed in order to get authenticated.
+	_, err := cl.GetInfo(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	// The needed API call.
+	grant, err := cl.GetOauthTokenFromPassword(ctx, username, password)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	cl.token = grant.AccessToken
+
+	return nil
+}
