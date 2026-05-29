@@ -7,6 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -128,18 +130,26 @@ func (bld *Build) MarshalJSON() ([]byte, error) {
 func (cl *Client) ListPipelineBuilds(ctx context.Context, team, pipeline string,
 	limit int,
 ) ([]Build, error) {
+	const op = "ListPipelineBuilds"
 	uri := cl.serverURL.JoinPath("/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
 	values := url.Values{}
 	if limit > 0 {
 		values.Set("limit", strconv.Itoa(limit))
 	}
-	body, err := get(ctx, cl.httpClient, uri.String(), values)
+
+	resp, err := get(ctx, cl.httpClient, uri.String(), nil, values)
 	if err != nil {
-		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", uri, err)
+		return nil, fmt.Errorf("%s: url: %s: %s", op, uri, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("%s: %s", op, responseError(resp.StatusCode, body, err))
 	}
 	var builds []Build
-	if err := json.Unmarshal(body, &builds); err != nil {
-		return nil, err
+	if err := json.NewDecoder(resp.Body).Decode(&builds); err != nil {
+		return nil, fmt.Errorf("%s: %s", op, err)
 	}
 	return builds, nil
 }

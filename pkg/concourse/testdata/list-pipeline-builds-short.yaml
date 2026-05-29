@@ -8,6 +8,9 @@ interactions:
         proto_minor: 1
         content_length: 0
         host: ci.concourse-ci.org
+        headers:
+          User-Agent:
+            - ghibli
         form:
             limit:
                 - "2"

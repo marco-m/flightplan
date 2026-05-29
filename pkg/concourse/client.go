@@ -4,9 +4,7 @@
 package concourse
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -40,32 +38,4 @@ func NewClient(args ClientArgs) (*Client, error) {
 	}
 
 	return client, nil
-}
-
-func get(ctx context.Context, hclient *http.Client, theUrl string, values url.Values,
-) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, theUrl, nil)
-	if err != nil {
-		return nil, fmt.Errorf("get: new request: %s", err)
-	}
-	req.URL.RawQuery = values.Encode()
-	resp, err := hclient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("get: do: %s", err)
-	}
-	defer resp.Body.Close()
-
-	body, errBody := io.ReadAll(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		if errBody != nil {
-			return nil, fmt.Errorf("get: status code: %d (%s)", resp.StatusCode, errBody)
-		}
-		return nil, fmt.Errorf("get: status code: %d (%s)", resp.StatusCode, string(body))
-	}
-	if errBody != nil {
-		return body, fmt.Errorf("get: read body: %s", errBody)
-	}
-
-	return body, nil
 }
