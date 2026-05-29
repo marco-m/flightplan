@@ -33,8 +33,8 @@ func TestClient_ListPipelineBuilds(t *testing.T) {
 	const team = "main"
 	const pipeline = "concourse"
 	const limit = 2
-	concourseClient, err := concourse.NewClient(concourse.Client{
-		Server:     "https://ci.concourse-ci.org",
+	concourseClient, err := concourse.NewClient(concourse.ClientArgs{
+		ServerURL:  "https://ci.concourse-ci.org",
 		HttpClient: rec.GetDefaultClient(),
 	})
 	assert.NoError(t, err, "concourse.NewClient")

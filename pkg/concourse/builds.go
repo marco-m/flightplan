@@ -128,16 +128,12 @@ func (bld *Build) MarshalJSON() ([]byte, error) {
 func (cl *Client) ListPipelineBuilds(ctx context.Context, team, pipeline string,
 	limit int,
 ) ([]Build, error) {
-	theUrl, err := url.JoinPath(cl.Server,
-		"/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
-	if err != nil {
-		return nil, err
-	}
+	uri := cl.serverURL.JoinPath("/api/v1/teams/", team, "/pipelines", pipeline, "/builds")
 	values := url.Values{}
 	values.Set("limit", strconv.Itoa(limit))
-	body, err := get(ctx, cl.HttpClient, theUrl, values)
+	body, err := get(ctx, cl.httpClient, uri.String(), values)
 	if err != nil {
-		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", theUrl, err)
+		return nil, fmt.Errorf("ListPipelineBuilds: url: %s: %s", uri, err)
 	}
 	var builds []Build
 	if err := json.Unmarshal(body, &builds); err != nil {

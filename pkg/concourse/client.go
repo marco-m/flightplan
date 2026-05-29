@@ -5,7 +5,6 @@ package concourse
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,23 +12,34 @@ import (
 )
 
 // Client is a minimal client for the Concourse HTTP API.
-// Do not instantiate directly; instead use NewClient.
+// Use [NewClient] to instantiate.
 type Client struct {
-	Server     string       // Mandatory.
-	HttpClient *http.Client // Optional; to be overridden in tests.
+	serverURL  *url.URL
+	httpClient *http.Client
+}
+
+// Arguments to [NewClient].
+type ClientArgs struct {
+	ServerURL  string       // Mandatory.
+	HttpClient *http.Client // Optional; overridable in tests.
 }
 
 // NewClient instantiates a Concourse [Client].
-func NewClient(opts Client) (*Client, error) {
-	client := opts
-	if client.Server == "" {
-		return nil, errors.New("concourse.NewClient: empty field Server")
+func NewClient(args ClientArgs) (*Client, error) {
+	client := &Client{}
+
+	uri, err := url.Parse(args.ServerURL)
+	if err != nil {
+		return nil, fmt.Errorf("concourse.NewClient: %s", err)
 	}
-	if client.HttpClient == nil {
-		client.HttpClient = &http.Client{}
+	client.serverURL = uri
+
+	client.httpClient = args.HttpClient
+	if client.httpClient == nil {
+		client.httpClient = &http.Client{}
 	}
 
-	return &client, nil
+	return client, nil
 }
 
 func get(ctx context.Context, hclient *http.Client, theUrl string, values url.Values,
