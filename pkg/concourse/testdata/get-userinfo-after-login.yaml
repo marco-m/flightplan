@@ -41,7 +41,7 @@ interactions:
             Content-Type:
                 - application/json
             Date:
-                - Sat, 30 May 2026 20:24:15 GMT
+                - Sun, 31 May 2026 09:15:27 GMT
             Vary:
                 - Accept-Encoding
             X-Concourse-Version:
@@ -56,7 +56,7 @@ interactions:
                 - 1; mode=block
         status: 200 OK
         code: 200
-        duration: 30.369583ms
+        duration: 25.947833ms
     - id: 1
       request:
         proto: HTTP/1.1
@@ -90,9 +90,9 @@ interactions:
         content_length: 1233
         body: |-
             {
-              "access_token": "aig0TL8wDk5liuFw/N1ki16Dg5zwmBxqAAAAAA",
+              "access_token": "Rv8hDS992vXAMeEDKMNZNVRlkWKwTR1qAAAAAA",
               "expires_in": 86399,
-              "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjdmY2I5YjY1OWI4ZmQ5MjliNGIyMDczZTk5MmFmMGNiY2E3Nzc2YWQifQ.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2t5L2lzc3VlciIsInN1YiI6IkNnUnRZV2x1RWdWc2IyTmhiQSIsImF1ZCI6ImZseSIsImV4cCI6MTc4MDI1OTA1NiwiaWF0IjoxNzgwMTcyNjU2LCJhdF9oYXNoIjoiQWdLTl9WazRqYjcxVjFoOVhrNHVCdyIsImVtYWlsIjoibWFpbiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoibWFpbiIsImZlZGVyYXRlZF9jbGFpbXMiOnsiY29ubmVjdG9yX2lkIjoibG9jYWwiLCJ1c2VyX2lkIjoibWFpbiJ9fQ.mXMACO-s4o5igDyOSiGrhaEq3kIw0M3b8UyW_wsi1IW394Ob5SNxUVneLlwJyFUQ1OFqHxxotMnpCVBWcnS9xufw7mzebkg04_Jq_W5kXKVqHI-X9PjYG-0KfDnyNq95OluEWbWl10bRXuRo4aDchwWf2pHR1BNlfQVN7xs0-64E6SFG-dwQrLgMl9OvP0G1N2Ziel4DFVyAWnxH9eDmB4V4XUNTMOtNLELHnacIHu0QSvzXFDEyvLC6VkoSz71zbJn6WWzZyaLK-D8pseKF2vstV7oknh5T_aqiSRDMDtMvf-IKzE3-2mNStv62dFsFbziihLjmXWr1Mb7SnXOEvC8YcJeV-OnC5gEOnU7PfC5K-se9450hgZWG8mgN3jPKmsjX_Y2ot2AuzsSuuqXdCvk7GmO6yoxNPFoL68-uRevuJp6da0QFDTVGKEYmSVJT-Bsg67clpC0oi1pMPLwmew51cuaAE-UQDM_xqVNV3J0HhtitOF_KO0vdPJGPr4g186NrKYRHxoNJAOmWu5Ad_ma-J_UXYhGRfTI16j3PkL8Dd1f8dB9r0ZRQ5LXfMirUF8kgwACd23wxkVIa7SDCRVvn2P7lGl08XelAoXnJLo-SjBP4z7BS3GispU1h81Nmcl-jyzBLPSaDtN6lUcPPXZdQ4LN9VpTKddMJvK3B6R8",
+              "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjdmY2I5YjY1OWI4ZmQ5MjliNGIyMDczZTk5MmFmMGNiY2E3Nzc2YWQifQ.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvc2t5L2lzc3VlciIsInN1YiI6IkNnUnRZV2x1RWdWc2IyTmhiQSIsImF1ZCI6ImZseSIsImV4cCI6MTc4MDMwNTMyOCwiaWF0IjoxNzgwMjE4OTI4LCJhdF9oYXNoIjoiUzQtRVVPN2MwOW0xRXA2eU5HQWRadyIsImVtYWlsIjoibWFpbiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoibWFpbiIsImZlZGVyYXRlZF9jbGFpbXMiOnsiY29ubmVjdG9yX2lkIjoibG9jYWwiLCJ1c2VyX2lkIjoibWFpbiJ9fQ.OldwjGArRb1piAgqZ1gLKdHExla_TpFLApDl9wGOVErF5YjYKr1dxvMfPEt6PxAVs1bjBvkTmQrI1jVie8lRZzxc2ydxwSfS1msSTmQelp9bF_K5QCzvDp0WK5tfvOSDlJE8xpYM9nLU8uzJyNArieUhIj1n2fhKv8CUB1shBXx98LDEGn6WqZHB_mhx5HOa4EpfRfPd0-EZVE1xBeIJZbencmOPb1fiaM0G1T7M2mB0WeDdlXGx1bzKv6kzB61lDnK8OCQ4cV7AKUXYmKINmObSN_sPNK4elakbOozEjDq69qPJlrXUuo-0XIqApSt9sI-tmSW49UXrhqTN2n8yK31WEXOTZ1qrv83uNam5AoT0PnGncZ3jq7LFpjE_btyOcDBXy9Jh1W_QmvGy9tBkz7hExdTnbJ8NUbsmZkC27dKd8B0dxMZqABVvLTbQ79vyDpNLuR5EzDjZDBx1qFrIDaDdgBOeMXS2HCb0Kd4ULvz5zQQ8-TIfQ99SdC6cDRe__WUmek_1Dd7jbGakwduIL5eBkSsTJ7fuF8zxp59-tGryJISiVFzpcD3GbsMrzGQc49wnGRNdsEHVosely6sVtt-Sto7nhKaHXKKh-JijXDpSzATSB2s_kl-tpLgWIuOrotOieZ-WCXuuDgK6TEVCsqtNfSShV7Nu4Mx8Tt1QFow",
               "token_type": "bearer"
             }
         headers:
@@ -105,7 +105,7 @@ interactions:
             Content-Type:
                 - application/json
             Date:
-                - Sat, 30 May 2026 20:24:16 GMT
+                - Sun, 31 May 2026 09:15:28 GMT
             Pragma:
                 - no-cache
             X-Content-Type-Options:
@@ -118,7 +118,7 @@ interactions:
                 - 1; mode=block
         status: 200 OK
         code: 200
-        duration: 124.707083ms
+        duration: 124.561666ms
     - id: 2
       request:
         proto: HTTP/1.1
@@ -128,7 +128,7 @@ interactions:
         host: localhost:1234
         headers:
             Authorization:
-                - Bearer aig0TL8wDk5liuFw/N1ki16Dg5zwmBxqAAAAAA
+                - Bearer Rv8hDS992vXAMeEDKMNZNVRlkWKwTR1qAAAAAA
             User-Agent:
                 - ghibli
         url: http://localhost:1234/api/v1/user
@@ -165,7 +165,7 @@ interactions:
             Content-Type:
                 - application/json
             Date:
-                - Sat, 30 May 2026 20:24:16 GMT
+                - Sun, 31 May 2026 09:15:28 GMT
             Vary:
                 - Accept-Encoding
             X-Concourse-Version:
@@ -180,7 +180,7 @@ interactions:
                 - 1; mode=block
         status: 200 OK
         code: 200
-        duration: 3.591ms
+        duration: 3.911833ms
     - id: 3
       request:
         proto: HTTP/1.1
@@ -190,7 +190,85 @@ interactions:
         host: localhost:1234
         headers:
             Authorization:
-                - Bearer aig0TL8wDk5liuFw/N1ki16Dg5zwmBxqAAAAAA
+                - Bearer Rv8hDS992vXAMeEDKMNZNVRlkWKwTR1qAAAAAA
+            User-Agent:
+                - ghibli
+        url: http://localhost:1234/api/v1/teams
+        method: GET
+      response:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 211
+        body: |-
+            [
+              {
+                "auth": {
+                  "owner": {
+                    "groups": [],
+                    "users": [
+                      "local:dev"
+                    ]
+                  },
+                  "viewer": {
+                    "groups": [],
+                    "users": [
+                      "local:readonly"
+                    ]
+                  }
+                },
+                "id": 2,
+                "name": "developers"
+              },
+              {
+                "auth": {
+                  "owner": {
+                    "groups": [],
+                    "users": [
+                      "local:main"
+                    ]
+                  }
+                },
+                "id": 1,
+                "name": "main"
+              }
+            ]
+        headers:
+            Cache-Control:
+                - no-store, private
+            Content-Length:
+                - "211"
+            Content-Security-Policy:
+                - frame-ancestors 'none'
+            Content-Type:
+                - application/json
+            Date:
+                - Sun, 31 May 2026 09:15:28 GMT
+            Vary:
+                - Accept-Encoding
+            X-Concourse-Version:
+                - 8.2.1
+            X-Content-Type-Options:
+                - nosniff
+            X-Download-Options:
+                - noopen
+            X-Frame-Options:
+                - deny
+            X-Xss-Protection:
+                - 1; mode=block
+        status: 200 OK
+        code: 200
+        duration: 3.210542ms
+    - id: 4
+      request:
+        proto: HTTP/1.1
+        proto_major: 1
+        proto_minor: 1
+        content_length: 0
+        host: localhost:1234
+        headers:
+            Authorization:
+                - Bearer Rv8hDS992vXAMeEDKMNZNVRlkWKwTR1qAAAAAA
             User-Agent:
                 - ghibli
         url: http://localhost:1234/api/v1/user
@@ -227,7 +305,7 @@ interactions:
             Content-Type:
                 - application/json
             Date:
-                - Sat, 30 May 2026 20:24:16 GMT
+                - Sun, 31 May 2026 09:15:28 GMT
             Vary:
                 - Accept-Encoding
             X-Concourse-Version:
@@ -242,4 +320,4 @@ interactions:
                 - 1; mode=block
         status: 200 OK
         code: 200
-        duration: 2.5845ms
+        duration: 2.665792ms

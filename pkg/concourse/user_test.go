@@ -126,3 +126,23 @@ func TestClient_GetUserInfoAfterLoginPasses(t *testing.T) {
 	}
 	assert.DeepEqual(t, have, want, "GetUserInfo")
 }
+
+func TestClient_ListTeamsWithoutLoginFails(t *testing.T) {
+	// Arrange recorder.
+	rec, teardown := testhelpers.SetupRecorder(t, "testdata/list-teams-without-login")
+	t.Cleanup(func() { teardown(t) })
+
+	// Arrange SUT.
+	client, err := concourse.NewClient(concourse.ClientArgs{
+		ServerURL:  "http://localhost:8080",
+		HttpClient: rec.GetDefaultClient(),
+	})
+	assert.NoError(t, err, "concourse.NewClient")
+	ctx := context.Background()
+
+	// Act.
+	_, err = client.ListTeams(ctx)
+
+	// Assert.
+	assert.ErrorIs(t, err, concourse.ErrUnauthorized, "ListTeams")
+}

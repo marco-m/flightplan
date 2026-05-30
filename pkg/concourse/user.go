@@ -91,6 +91,11 @@ func (cl *Client) PasswordLogin(ctx context.Context, username, password string) 
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
+	_, err = cl.ListTeams(ctx)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
 	return nil
 }
 
@@ -140,5 +145,50 @@ func (cl *Client) GetUserInfo(ctx context.Context) (UserInfo, error) {
 		body, err := io.ReadAll(resp.Body)
 		return UserInfo{}, fmt.Errorf("%s: %s", op, responseError(resp.StatusCode, body, err))
 
+	}
+}
+
+type Team struct {
+	ID   int      `json:"id,omitempty"`
+	Name string   `json:"name,omitempty"`
+	Auth TeamAuth `json:"auth,omitempty"`
+}
+
+// See go-concourse/concourse/teams.go
+type TeamAuth map[string]map[string][]string
+
+// ListTeams returns a list of teams configured on Concourse. It is unclear if this list
+// represents all the teams or only the teams to which the user with the bearer token
+// belongs to.
+//
+// From https://github.com/concourse/concourse/blob/master/atc/routes.go
+// Path: /api/v1/teams
+// Method: GET
+func (cl *Client) ListTeams(ctx context.Context) ([]Team, error) {
+	const op = "ListTeams"
+	uri := cl.serverURL.JoinPath("/api/v1/teams")
+	header := make(http.Header)
+	header.Set("Authorization", "Bearer "+cl.token)
+
+	resp, err := get(ctx, cl.httpClient, uri.String(), header, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", op, err)
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		var teams []Team
+		err = json.NewDecoder(resp.Body).Decode(&teams)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %s", op, err)
+		}
+		return teams, nil
+	case http.StatusUnauthorized:
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("%s: %w (%s)", op, ErrUnauthorized, string(body))
+	default:
+		body, err := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("%s: %s", op, responseError(resp.StatusCode, body, err))
 	}
 }
